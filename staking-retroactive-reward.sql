@@ -134,7 +134,7 @@ final_reward_list AS (
 )
 
 # Output results
-SELECT address, CAST(reward AS NUMERIC) AS reward
+SELECT address, CAST(reward AS NUMERIC)/1e18 AS reward
 FROM final_reward_list 
 WHERE 
   address != NullAddress AND
