@@ -1,17 +1,26 @@
 # Config 
-DECLARE LPTokenAddress DEFAULT "0xebde9f61e34b7ac5aae5a4170e964ea85988008c";   # RAI address, lower case only
-DECLARE StartDate DEFAULT TIMESTAMP("2020-10-26 18:11:20+00");                 # UTC date, Set it to the first ever LP token mint
-DECLARE CutoffDate DEFAULT TIMESTAMP("2021-01-25 12:43:21+00");                # UTC date, after this date we won't give anymore rewards
+DECLARE LPTokenAddress DEFAULT "0xebde9f61e34b7ac5aae5a4170e964ea85988008c";   # UNI-V2-ETH/RAI address, lower case only
+DECLARE DeployDate DEFAULT TIMESTAMP("2020-10-26 18:11:20+00");                # UTC date, Set it to just before the first ever LP token mint
+DECLARE StartDate DEFAULT TIMESTAMP("2020-11-1 00:00:00+00");                  # UTC date, Set it to when to start to distribute rewards
+DECLARE CutoffDate DEFAULT TIMESTAMP("2021-01-25 12:43:21+00");                # UTC date, Set it to when to stop to distribute rewards
 DECLARE TokenOffered DEFAULT 1000e18;                                          # Number of FLX to distribute in total
 
 # Constants
 DECLARE NullAddress DEFAULT "0x0000000000000000000000000000000000000000";
 DECLARE RewardRate DEFAULT TokenOffered / CAST(TIMESTAMP_DIFF(CutoffDate, StartDate, SECOND) AS NUMERIC);
 
+# Exclusion list of addresses that wont receive rewards, lower case only!
+WITH excluded_list AS (
+  SELECT * FROM UNNEST ([
+    "0x9d5ab5758ac8b14bee81bbd4f019a1a048cf2246",
+    "0x60efac991ae39fa6a594af58fd6fcb57940c3aa7"
+    # TODO: Add addresses of exclusion list here
+  ]) as address),
+
 # Fetch the list of all RAI LP token transfers (includes mint & burns)
-WITH raw_lp_transfers as (
+raw_lp_transfers AS (
   SELECT * FROM `bigquery-public-data.crypto_ethereum.token_transfers`
-  WHERE block_timestamp >= StartDate 
+  WHERE block_timestamp >= DeployDate 
     AND block_timestamp <= CutoffDate
     AND token_address = LPTokenAddress
     # Parasite transaction
@@ -19,22 +28,48 @@ WITH raw_lp_transfers as (
 ), 
 
 # Calculate the realtive LP token balance delta, outgoing transfer is negative delta
-lp_transfers_deltas as (
+lp_transfers_deltas AS (
   SELECT * FROM (
-    SELECT block_timestamp, block_number, log_index, from_address as address, -1 * CAST(value AS NUMERIC) AS delta_lp FROM raw_lp_transfers
+    SELECT block_timestamp, block_number, log_index, from_address AS address, -1 * CAST(value AS NUMERIC) AS delta_lp FROM raw_lp_transfers
     UNION ALL 
-    SELECT block_timestamp, block_number, log_index, to_address as address, CAST(value AS NUMERIC) AS delta_lp FROM raw_lp_transfers
+    SELECT block_timestamp, block_number, log_index, to_address AS address, CAST(value AS NUMERIC) AS delta_lp FROM raw_lp_transfers
   )
 ),
 
+# Keep only records after the start date
+lp_transfers_deltas_after AS (
+  SELECT * FROM lp_transfers_deltas
+  WHERE block_timestamp >= StartDate
+),
+
+# Process records before the start date like if everyone prior to strtDate had deposited on start date
+lp_transfers_deltas_before AS (
+  SELECT  StartDate AS block_timestamp, MAX(block_number) AS block_number, 0 AS log_index, address, SUM(delta_lp) AS delta_lp FROM lp_transfers_deltas
+  WHERE block_timestamp <= StartDate
+  GROUP BY address
+),
+
+# Merge records from before and after
+lp_transfers_deltas_on_start AS (
+  SELECT block_timestamp, block_number, log_index, address, delta_lp FROM lp_transfers_deltas_before
+  UNION ALL 
+  SELECT block_timestamp, block_number, log_index, address, delta_lp FROM lp_transfers_deltas_after
+),
+
+# Exclude the addresses from the exclusion list
+lp_with_exclusions AS (
+SELECT * FROM lp_transfers_deltas_on_start
+WHERE address NOT IN (SELECT address FROM excluded_list)
+),
+
 # Add lp token total_supply and individual balances
-lp_total_supply_and_balances as (
+lp_total_supply_and_balances AS (
   SELECT * ,
     # Add total_supply of lp token by looking at the balance of 0x0
-    SUM(CASE WHEN address = NullAddress THEN -1 * delta_lp ELSE 0 END) OVER(ORDER BY block_timestamp, log_index) as total_supply,
+    SUM(CASE WHEN address = NullAddress THEN -1 * delta_lp ELSE 0 END) OVER(ORDER BY block_timestamp, log_index) AS total_supply,
     # LP balance of each individual address
-    SUM(delta_lp) OVER(PARTITION BY address ORDER BY block_timestamp, log_index) as balance
-  FROM lp_transfers_deltas
+    SUM(delta_lp) OVER(PARTITION BY address ORDER BY block_timestamp, log_index) AS balance
+  FROM lp_with_exclusions
 ),
 
 # Add the delta_reward_per_token (increase in reward_per_token)
