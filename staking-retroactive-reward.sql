@@ -40,7 +40,7 @@ lp_total_supply_and_balances as (
 # Add the delta_reward_per_token (increase in reward_per_token)
 lp_delta_reward_per_token AS (
   SELECT *, 
-      COALESCE(CAST(TIMESTAMP_DIFF(block_timestamp, LAG(block_timestamp) OVER( ORDER BY block_timestamp, log_index), SECOND) AS NUMERIC), 0) as delta_t,
+      COALESCE(CAST(TIMESTAMP_DIFF(block_timestamp, LAG(block_timestamp) OVER( ORDER BY block_timestamp, log_index), SECOND) AS NUMERIC), 0) AS delta_t,
       COALESCE(CAST(TIMESTAMP_DIFF(block_timestamp, LAG(block_timestamp) OVER( ORDER BY block_timestamp, log_index), SECOND) AS NUMERIC), 0) * RewardRate / (LAG(total_supply) OVER(ORDER BY block_timestamp, log_index)) AS delta_reward_per_token
 
   FROM lp_total_supply_and_balances),
@@ -73,10 +73,10 @@ lp_with_cutoff_events AS (
   SELECT
     CutoffDate AS block_timestamp,
     # Set it to the highest log index to be sure it comes last
-    (SELECT MAX(log_index) FROM lp_reward_per_token) as log_index,
-    address as address,
+    (SELECT MAX(log_index) FROM lp_reward_per_token) AS log_index,
+    address AS address,
     # You unstaked so your balance is 0
-    0 as balance,
+    0 AS balance,
     # ⬇ reward_per_token on cutoff date                            ⬇ Time passed since the last update of reward_per_token                                                                              ⬇ latest total_supply
     (SELECT MAX(reward_per_token) FROM lp_reward_per_token) + COALESCE(CAST(TIMESTAMP_DIFF(CutoffDate, (SELECT MAX(block_timestamp) FROM lp_reward_per_token), SECOND) AS NUMERIC), 0) * RewardRate / (SELECT total_supply FROM lp_reward_per_token ORDER BY block_timestamp DESC LIMIT 1) 
     AS reward_per_token
@@ -87,19 +87,19 @@ lp_with_cutoff_events AS (
 lp_earned AS (
   SELECT *,
     #                       ⬇ userRewardPerTokenPaid                                                                             ⬇ balance just before 
-    (reward_per_token - COALESCE(LAG(reward_per_token,1) OVER(PARTITION BY address ORDER BY block_timestamp, log_index), 0)) * COALESCE(LAG(balance) OVER(PARTITION BY address ORDER BY block_timestamp, log_index),0) as earned,
+    (reward_per_token - COALESCE(LAG(reward_per_token,1) OVER(PARTITION BY address ORDER BY block_timestamp, log_index), 0)) * COALESCE(LAG(balance) OVER(PARTITION BY address ORDER BY block_timestamp, log_index),0) AS earned,
   FROM lp_with_cutoff_events
 ),
 
 # Sum up the earned event per address
 final_reward_list AS (
-  SELECT address, SUM(earned) as reward
+  SELECT address, SUM(earned) AS reward
   FROM lp_earned
   GROUP BY address
 )
 
 # Output results
-SELECT address, CAST(reward AS NUMERIC) as reward
+SELECT address, CAST(reward AS NUMERIC) AS reward
 FROM final_reward_list 
 WHERE 
   address != NullAddress AND
