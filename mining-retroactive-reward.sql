@@ -1,13 +1,12 @@
 # SAFE Debt Modifications
 # Config 
-DECLARE LPTokenAddress DEFAULT "0x8ae720a71622e824f576b4a8c03031066548a3b1";   # UNI-V2-ETH/RAI address, lower case only
-DECLARE SAFEEngineAddress DEFAULT "0xcc88a9d330da1133df3a7bd823b95e52511a6962";   # UNI-V2-ETH/RAI address, lower case only
-DECLARE SAFEManagerAddress DEFAULT "0xefe0b4ca532769a3ae758fd82e1426a03a94f185";
-DECLARE DeployDate DEFAULT TIMESTAMP("2021-02-13 00:00:00+00");                # UTC date, Set it to just before the first ever LP token mint
-DECLARE StartDate DEFAULT TIMESTAMP("2021-02-17 00:00:00+00");                 # UTC date, Set it to when to start to distribute rewards
-DECLARE CutoffDate DEFAULT TIMESTAMP("2021-02-23 00:00:00+00");                # UTC date, Set it to when to stop to distribute rewards
-DECLARE TokenOffered DEFAULT 1000e18;  # Number of FLX to distribute in total
-DECLARE ModifyCollTopic DEFAULT "0x4a1d86235388d42bee8b26817295ba354feb351780a0005e14a02303ac302df8"; # SAFE Manager Topic
+DECLARE LPTokenAddress DEFAULT "0x8ae720a71622e824f576b4a8c03031066548a3b1";      # UNI-V2-ETH/RAI address, lower case only
+DECLARE SAFEManagerAddress DEFAULT "0xefe0b4ca532769a3ae758fd82e1426a03a94f185";  # GebSafeManager
+DECLARE DeployDate DEFAULT TIMESTAMP("2021-02-13 00:00:00+00");                   # UTC date, Set it to just before the first ever LP token mint
+DECLARE StartDate DEFAULT TIMESTAMP("2021-02-17 00:00:00+00");                    # UTC date, Set it to when to start to distribute rewards
+DECLARE CutoffDate DEFAULT TIMESTAMP("2021-02-23 00:00:00+00");                   # UTC date, Set it to when to stop to distribute rewards
+DECLARE TokenOffered DEFAULT 1000e18;                                             # Number of FLX to distribute in total
+DECLARE ModifyCollTopic DEFAULT "0x4a1d86235388d42bee8b26817295ba354feb351780a0005e14a02303ac302df8"; # SAFE Manager ModifySAFECollateralization topic
 # Constants
 DECLARE NullAddress DEFAULT "0x0000000000000000000000000000000000000000";
 DECLARE RewardRate DEFAULT TokenOffered / CAST(TIMESTAMP_DIFF(CutoffDate, StartDate, SECOND) AS NUMERIC);
