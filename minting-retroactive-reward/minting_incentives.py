@@ -24,23 +24,19 @@ web3 = Web3(HTTPProvider(endpoint_uri=ETH_RPC_URL, request_kwargs={"timeout": 60
 
 deploy_block = 11848304
 deploy_time = '2021-02-13 12:33:18+00'
-start_block = int(sys.argv[1])
-cutoff_block = int(sys.argv[2])
-output_file = sys.argv[3]
 
-if len(sys.argv) != 4:
-    print("Usage: python minting_incentives.py <start_block> <cutoff_block> <output_file>")
+start_block = 11896533 # 2021-02-20 22:25:00+00    20th Feb 2021 10:25 PM GMT
+start_time = '2021-02-20 22:25:00+00'
+
+cutoff_block = 11933211 # 2021-02-26 13:49:00+00   26th Feb 2021 1:49 PM GMT
+cutoff_time = '2021-02-26 13:49:00+00'
+output_file = sys.argv[1]
+
+if len(sys.argv) != 2:
+    print("Usage: python minting_incentives.py <output_file>")
     sys.exit()
 
 assert start_block < cutoff_block
-
-start = web3.eth.getBlock(start_block)
-cutoff = web3.eth.getBlock(cutoff_block)
-start_time = datetime.fromtimestamp(start['timestamp'], pytz.utc)
-cutoff_time = datetime.fromtimestamp(cutoff['timestamp'], pytz.utc)
-
-start_block = start['number']
-cutoff_block = cutoff['number']
 
 query = f'''
 DECLARE SAFEEngineAddress DEFAULT "0xcc88a9d330da1133df3a7bd823b95e52511a6962"; 
