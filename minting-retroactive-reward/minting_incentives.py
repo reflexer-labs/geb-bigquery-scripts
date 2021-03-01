@@ -8,22 +8,22 @@ from web3 import Web3, HTTPProvider
 import pandas as pd
 import pytz
 from google.cloud import bigquery
-
 from util import get_safe_owners
-ETH_RPC_URL = "http://13.59.107.140:8545"
+
+ETH_RPC_URL = os.environ['ETH_RPC_URL']
 GRAPH_URL = 'https://api.thegraph.com/subgraphs/name/reflexer-labs/rai-mainnet'
 BQ_SAFEOWNERS = 'minting-incentives:safe_owners.safe_owners'
 BQ_SAFEOWNERS = 'safe_owners.safe_owners'
 GOOGLE_AUTH = os.environ['GOOGLE_AUTH']
 
-TRANSFER_SAFE_EVENT = '{"anonymous":false,"inputs":[{"indexed":true,"internalType":"bytes32","name":"collateralType","type":"bytes32"},{"indexed":true,"internalType":"address","name":"src","type":"address"},{"indexed":true,"internalType":"address","name":"dst","type":"address"},{"indexed":false,"internalType":"int256","name":"deltaCollateral","type":"int256"},{"indexed":false,"internalType":"int256","name":"deltaDebt","type":"int256"},{"indexed":false,"internalType":"uint256","name":"srcLockedCollateral","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"srcGeneratedDebt","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"dstLockedCollateral","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"dstGeneratedDebt","type":"uint256"}],"name":"TransferSAFECollateralAndDebt","type":"event"}'#.replace('{','{{').replace('}','}}')
+TRANSFER_SAFE_EVENT = '{"anonymous":false,"inputs":[{"indexed":true,"internalType":"bytes32","name":"collateralType","type":"bytes32"},{"indexed":true,"internalType":"address","name":"src","type":"address"},{"indexed":true,"internalType":"address","name":"dst","type":"address"},{"indexed":false,"internalType":"int256","name":"deltaCollateral","type":"int256"},{"indexed":false,"internalType":"int256","name":"deltaDebt","type":"int256"},{"indexed":false,"internalType":"uint256","name":"srcLockedCollateral","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"srcGeneratedDebt","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"dstLockedCollateral","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"dstGeneratedDebt","type":"uint256"}],"name":"TransferSAFECollateralAndDebt","type":"event"}'
 
-MODSAFE_EVENT = '{"anonymous":false,"inputs":[{"indexed":true,"internalType":"bytes32","name":"collateralType","type":"bytes32"},{"indexed":true,"internalType":"address","name":"safe","type":"address"},{"indexed":false,"internalType":"address","name":"collateralSource","type":"address"},{"indexed":false,"internalType":"address","name":"debtDestination","type":"address"},{"indexed":false,"internalType":"int256","name":"deltaCollateral","type":"int256"},{"indexed":false,"internalType":"int256","name":"deltaDebt","type":"int256"},{"indexed":false,"internalType":"uint256","name":"lockedCollateral","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"generatedDebt","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"globalDebt","type":"uint256"}],"name":"ModifySAFECollateralization","type":"event"}'#.replace('{','{{').replace('}','}}')
+MODSAFE_EVENT = '{"anonymous":false,"inputs":[{"indexed":true,"internalType":"bytes32","name":"collateralType","type":"bytes32"},{"indexed":true,"internalType":"address","name":"safe","type":"address"},{"indexed":false,"internalType":"address","name":"collateralSource","type":"address"},{"indexed":false,"internalType":"address","name":"debtDestination","type":"address"},{"indexed":false,"internalType":"int256","name":"deltaCollateral","type":"int256"},{"indexed":false,"internalType":"int256","name":"deltaDebt","type":"int256"},{"indexed":false,"internalType":"uint256","name":"lockedCollateral","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"generatedDebt","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"globalDebt","type":"uint256"}],"name":"ModifySAFECollateralization","type":"event"}'
 
 web3 = Web3(HTTPProvider(endpoint_uri=ETH_RPC_URL, request_kwargs={"timeout": 60}))
 
 deploy_block = 11848304
-deploy_block_time = '2021-02-13 12:33:18+00'
+deploy_time = '2021-02-13 12:33:18+00'
 start_block = int(sys.argv[1])
 cutoff_block = int(sys.argv[2])
 output_file = sys.argv[3]
@@ -31,6 +31,7 @@ output_file = sys.argv[3]
 if len(sys.argv) != 4:
     print("Usage: python minting_incentives.py <start_block> <cutoff_block> <output_file>")
     sys.exit()
+
 assert start_block < cutoff_block
 
 start = web3.eth.getBlock(start_block)
@@ -45,7 +46,7 @@ query = f'''
 DECLARE SAFEEngineAddress DEFAULT "0xcc88a9d330da1133df3a7bd823b95e52511a6962"; 
 DECLARE SAFEManagerAddress DEFAULT "0xefe0b4ca532769a3ae758fd82e1426a03a94f185";
 DECLARE ProxyRegistry DEFAULT "0x4678f0a6958e4d2bc4f1baf7bc52e8f3564f3fe4";
-DECLARE DeployDate DEFAULT TIMESTAMP("2021-02-13 12:33:18+00");      # UTC date of deploy
+DECLARE DeployDate DEFAULT TIMESTAMP("{deploy_time}");          # UTC date of deploy
 DECLARE StartDate DEFAULT TIMESTAMP("{start_time}");                 # UTC date when minting rewards started
 DECLARE CutoffDate DEFAULT TIMESTAMP("{cutoff_time}");               # UTC date when minting rewards stopped
 DECLARE TokenOffered DEFAULT 1000e18;  # Number of FLX to distribute in total
@@ -253,7 +254,6 @@ def write_csv_to_bq(client, table_id, csv_file):
                 bigquery.SchemaField("safe", "STRING", "REQUIRED"),
                 bigquery.SchemaField("owner", "STRING", "REQUIRED"),
             ],
-     #       autodetect=True,
             skip_leading_rows=1,
         # The source format defaults to CSV, so the line below is optional.
         source_format=bigquery.SourceFormat.CSV,
@@ -269,23 +269,24 @@ def write_csv_to_bq(client, table_id, csv_file):
     destination_table = client.get_table(table_id)  # Make an API request.
     print("Loaded {} rows to {}".format(destination_table.num_rows, table_id))
 
+# setup bq client
 client = bigquery.Client.from_service_account_json(GOOGLE_AUTH)
 
+# Get SAFE owners from graph and save to BQ
 safe_owners = get_safe_owners(GRAPH_URL, cutoff_block)
 safe_owners.to_csv("safe_owners.csv", index=False)
-
 write_csv_to_bq(client, BQ_SAFEOWNERS, "safe_owners.csv")
 
+# Run BQ Query
 parent_job = client.query(query)
-
-# Wait for the whole script to finish.
 rows_iterable = parent_job.result()
 
-# Fetch result rows for the final sub-job in the script.
+# Fetch BQ results.
 rows = list(rows_iterable)
 
 print(f"{len(rows)} final addresses")
+
+# Write results to file
 with open(output_file, 'w') as f:
     for row in rows:
         f.write(f"{'='.join(map(str, row))}\n")
-#print(rows)
