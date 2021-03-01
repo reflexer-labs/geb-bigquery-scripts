@@ -4,13 +4,11 @@ import requests
 import time
 import json
 from datetime import datetime
-from web3 import Web3, HTTPProvider
 import pandas as pd
 import pytz
 from google.cloud import bigquery
 from util import get_safe_owners
 
-ETH_RPC_URL = os.environ['ETH_RPC_URL']
 GRAPH_URL = 'https://api.thegraph.com/subgraphs/name/reflexer-labs/rai-mainnet'
 BQ_SAFEOWNERS = 'minting-incentives:safe_owners.safe_owners'
 BQ_SAFEOWNERS = 'safe_owners.safe_owners'
@@ -19,8 +17,6 @@ GOOGLE_AUTH = os.environ['GOOGLE_AUTH']
 TRANSFER_SAFE_EVENT = '{"anonymous":false,"inputs":[{"indexed":true,"internalType":"bytes32","name":"collateralType","type":"bytes32"},{"indexed":true,"internalType":"address","name":"src","type":"address"},{"indexed":true,"internalType":"address","name":"dst","type":"address"},{"indexed":false,"internalType":"int256","name":"deltaCollateral","type":"int256"},{"indexed":false,"internalType":"int256","name":"deltaDebt","type":"int256"},{"indexed":false,"internalType":"uint256","name":"srcLockedCollateral","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"srcGeneratedDebt","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"dstLockedCollateral","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"dstGeneratedDebt","type":"uint256"}],"name":"TransferSAFECollateralAndDebt","type":"event"}'
 
 MODSAFE_EVENT = '{"anonymous":false,"inputs":[{"indexed":true,"internalType":"bytes32","name":"collateralType","type":"bytes32"},{"indexed":true,"internalType":"address","name":"safe","type":"address"},{"indexed":false,"internalType":"address","name":"collateralSource","type":"address"},{"indexed":false,"internalType":"address","name":"debtDestination","type":"address"},{"indexed":false,"internalType":"int256","name":"deltaCollateral","type":"int256"},{"indexed":false,"internalType":"int256","name":"deltaDebt","type":"int256"},{"indexed":false,"internalType":"uint256","name":"lockedCollateral","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"generatedDebt","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"globalDebt","type":"uint256"}],"name":"ModifySAFECollateralization","type":"event"}'
-
-web3 = Web3(HTTPProvider(endpoint_uri=ETH_RPC_URL, request_kwargs={"timeout": 60}))
 
 deploy_block = 11848304
 deploy_time = '2021-02-13 12:33:18+00'
