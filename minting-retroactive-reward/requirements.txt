@@ -1,0 +1,3 @@
+google-cloud-bigquery
+pandas
+web3
