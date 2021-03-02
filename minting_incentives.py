@@ -10,8 +10,8 @@ from google.cloud import bigquery
 from util import get_safe_owners
 
 GRAPH_URL = 'https://api.thegraph.com/subgraphs/name/reflexer-labs/rai-mainnet'
-BQ_SAFEOWNERS = 'minting-incentives:safe_owners.safe_owners'
 BQ_SAFEOWNERS = 'safe_owners.safe_owners'
+BQ_EXCLUDED_SAFES = 'exclusions.excluded_safes'
 GOOGLE_AUTH = os.environ['GOOGLE_AUTH']
 
 TRANSFER_SAFE_EVENT = '{"anonymous":false,"inputs":[{"indexed":true,"internalType":"bytes32","name":"collateralType","type":"bytes32"},{"indexed":true,"internalType":"address","name":"src","type":"address"},{"indexed":true,"internalType":"address","name":"dst","type":"address"},{"indexed":false,"internalType":"int256","name":"deltaCollateral","type":"int256"},{"indexed":false,"internalType":"int256","name":"deltaDebt","type":"int256"},{"indexed":false,"internalType":"uint256","name":"srcLockedCollateral","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"srcGeneratedDebt","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"dstLockedCollateral","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"dstGeneratedDebt","type":"uint256"}],"name":"TransferSAFECollateralAndDebt","type":"event"}'
@@ -26,10 +26,11 @@ start_time = '2021-02-20 22:25:00+00'
 
 cutoff_block = 11933211 # 2021-02-26 13:49:00+00   26th Feb 2021 1:49 PM GMT
 cutoff_time = '2021-02-26 13:49:00+00'
-output_file = sys.argv[1]
+exclusion_file = sys.argv[1]
+output_file = sys.argv[2]
 
-if len(sys.argv) != 2:
-    print("Usage: python minting_incentives.py <output_file>")
+if len(sys.argv) != 3:
+    print("Usage: python minting_incentives.py <exclusions_file> <output_file>")
     sys.exit()
 
 assert start_block < cutoff_block
@@ -75,13 +76,10 @@ CREATE TEMP FUNCTION
 """
 OPTIONS
   ( library="https://storage.googleapis.com/ethlab-183014.appspot.com/ethjs-abi.js" );
-  # Exclusion list of addresses that wont receive rewards, lower case only!
+
+# Exclusion list of addresses that wont receive rewards, lower case only!
 WITH excluded_list AS (
-  SELECT * FROM UNNEST ([
-    "0x9d5ab5758ac8b14bee81bbd4f019a1a048cf2246",
-    "0x60efac991ae39fa6a594af58fd6fcb57940c3aa7"
-    # TODO: Add addresses of exclusion list here
-  ]) as address),
+  SELECT * FROM {BQ_EXCLUDED_SAFES} as address),
 
 /*
 # Get all TransferSAFECollateralAndDebt events from SAFEEngine
@@ -104,7 +102,6 @@ deltaDebts_orig AS (
       AND topics[offset(0)] = ModifyCollTopic
 ),
 
-#select * from deltaDebts_orig limit 10;
 
 deltaDebts_raw AS (
   SELECT block_timestamp, block_number, log_index, safeMod.safe, safeMod.deltaDebt from deltaDebts_orig
@@ -213,13 +210,10 @@ final_reward_list AS (
 
 safe_owners AS (
   SELECT block, safe as address, owner
-  #from minting-incentives.safe_owners.safe_owners
   from `minting-incentives.safe_owners.safe_owners`
   WHERE
     block = {cutoff_block}
-)
-
-#select * from final_reward_list limit 100000;
+),
 
 #SELECT address, CAST(reward AS NUMERIC)/1e18 AS reward
 #FROM final_reward_list
@@ -228,25 +222,27 @@ safe_owners AS (
 #  reward > 0
 #ORDER BY reward DESC
 
+reward_list as (
+  SELECT safe_owners.owner as owner, CAST(final_reward_list.reward AS NUMERIC)/1e18 AS reward
+  FROM final_reward_list INNER JOIN safe_owners USING (address)
+  WHERE
+    address != NullAddress AND
+    reward > 0
+)
+
 # Output results
-SELECT safe_owners.owner, CAST(final_reward_list.reward AS NUMERIC)/1e18 AS reward
-FROM final_reward_list INNER JOIN safe_owners USING (address)
-WHERE
-  address != NullAddress AND
-  reward > 0
-ORDER BY reward DESC;
+SELECT owner, SUM(reward)
+FROM reward_list
+GROUP BY owner
+ORDER BY SUM(reward) DESC;
 '''
 
-def write_csv_to_bq(client, table_id, csv_file):
+def write_csv_to_bq(client, table_id, schema, csv_file):
     client.delete_table(table_id, not_found_ok=True)
 
     job_config = bigquery.LoadJobConfig(
-            schema=[
-                bigquery.SchemaField("block", "INT64", "REQUIRED"),
-                bigquery.SchemaField("safe", "STRING", "REQUIRED"),
-                bigquery.SchemaField("owner", "STRING", "REQUIRED"),
-            ],
-            skip_leading_rows=1,
+            schema=schema,
+            #skip_leading_rows=1,
         # The source format defaults to CSV, so the line below is optional.
         source_format=bigquery.SourceFormat.CSV,
     )
@@ -264,10 +260,25 @@ def write_csv_to_bq(client, table_id, csv_file):
 # setup bq client
 client = bigquery.Client.from_service_account_json(GOOGLE_AUTH)
 
-# Get SAFE owners from graph and save to BQ
+# Get owners from graph and write to BQ. The query uses these to map safe->owner
 safe_owners = get_safe_owners(GRAPH_URL, cutoff_block)
-safe_owners.to_csv("safe_owners.csv", index=False)
-write_csv_to_bq(client, BQ_SAFEOWNERS, "safe_owners.csv")
+safe_owners.to_csv("safe_owners.csv", header=False , index=False)
+
+owner_schema=[bigquery.SchemaField("block", "INT64", "REQUIRED"),
+              bigquery.SchemaField("safe", "STRING", "REQUIRED"),
+              bigquery.SchemaField("owner", "STRING", "REQUIRED")]
+write_csv_to_bq(client, BQ_SAFEOWNERS, owner_schema, "safe_owners.csv")
+
+# Write excluded safes to BQ. The query will exclude these.
+excluded_owners = pd.read_csv(exclusion_file, header=None, names=['owner'])
+excluded_owners.info()
+
+excluded_safes = excluded_owners.merge(safe_owners, on=['owner'])
+excluded_safes.info()
+excluded_safes.to_csv("excluded_safes.csv", header=False, index=False)
+
+exclusion_schema=[bigquery.SchemaField("address", "STRING", "REQUIRED")]
+write_csv_to_bq(client, BQ_EXCLUDED_SAFES, exclusion_schema, "excluded_safes.csv")
 
 # Run BQ Query
 parent_job = client.query(query)

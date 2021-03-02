@@ -9,13 +9,9 @@ DECLARE TokenOffered DEFAULT 1000e18;                                          #
 DECLARE NullAddress DEFAULT "0x0000000000000000000000000000000000000000";
 DECLARE RewardRate DEFAULT TokenOffered / CAST(TIMESTAMP_DIFF(CutoffDate, StartDate, SECOND) AS NUMERIC);
 
-# Exclusion list of addresses that wont receive rewards, lower case only!
+# Exclusion list of addresses that wont receive rewards
 WITH excluded_list AS (
-  SELECT * FROM UNNEST ([
-    "0x9d5ab5758ac8b14bee81bbd4f019a1a048cf2246",
-    "0x60efac991ae39fa6a594af58fd6fcb57940c3aa7"
-    # TODO: Add addresses of exclusion list here
-  ]) as address),
+  SELECT address FROM `minting-incentives.exclusions.excluded_owners`),
 
 # Fetch the list of all RAI LP token transfers (includes mint & burns)
 raw_lp_transfers AS (
