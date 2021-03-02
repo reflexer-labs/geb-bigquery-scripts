@@ -1,4 +1,5 @@
 venv
 *.json
 *.csv
+*.tmp
 __pycache__
