@@ -6,15 +6,15 @@ from util import write_csv_to_bq
 BQ_EXCLUDED_OWNERS = 'exclusions.excluded_owners' # Must match in prai .sql file
 GOOGLE_AUTH = os.environ['GOOGLE_AUTH']
 
-exclusion_file = sys.argv[1]
-output_file = sys.argv[2]
+query_file = sys.argv[1]
+exclusion_file = sys.argv[2]
+output_file = sys.argv[3]
 
-if len(sys.argv) != 3:
-    print("Usage: python prai_incentives.py <exclusions_file> <output_file>")
+if len(sys.argv) != 4:
+    print("Usage: python incentives_query.py <query_file> <exclusions_file> <output_file>")
     sys.exit()
 
-with open('queries/staking-retroactive-reward.sql', 'r') as file:
-#with open('queries/staking.sql', 'r') as file:
+with open(query_file, 'r') as file:
     query = file.read()
 
 # setup bq client
