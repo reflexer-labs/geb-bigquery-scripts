@@ -1,7 +1,7 @@
 # Config 
 DECLARE LPTokenAddress DEFAULT "0x8ae720a71622e824f576b4a8c03031066548a3b1";   # UNI-V2-ETH/RAI address, lower case only
 DECLARE DeployDate DEFAULT TIMESTAMP("2021-02-13 00:00:00+00");                # UTC date, Set it to just before the first ever LP token mint
-DECLARE StartDate DEFAULT TIMESTAMP("2021-02-17 00:00:00+00");                 # UTC date, Set it to when to start to distribute rewards
+DECLARE StartDate DEFAULT TIMESTAMP("2021-02-26 13:50:00+00");                 # UTC date, Set it to when to start to distribute rewards
 DECLARE CutoffDate DEFAULT TIMESTAMP("2021-02-20 00:00:00+00");                # UTC date, Set it to when to stop to distribute rewards
 DECLARE TokenOffered DEFAULT 1000e18;                                          # Number of FLX to distribute in total
 
@@ -9,13 +9,9 @@ DECLARE TokenOffered DEFAULT 1000e18;                                          #
 DECLARE NullAddress DEFAULT "0x0000000000000000000000000000000000000000";
 DECLARE RewardRate DEFAULT TokenOffered / CAST(TIMESTAMP_DIFF(CutoffDate, StartDate, SECOND) AS NUMERIC);
 
-# Exclusion list of addresses that wont receive rewards, lower case only!
+# Exclusion list of addresses that wont receive rewards
 WITH excluded_list AS (
-  SELECT * FROM UNNEST ([
-    "0x9d5ab5758ac8b14bee81bbd4f019a1a048cf2246",
-    "0x60efac991ae39fa6a594af58fd6fcb57940c3aa7"
-    # TODO: Add addresses of exclusion list here
-  ]) as address),
+  SELECT address FROM `minting-incentives.exclusions.excluded_owners`),
 
 # Fetch the list of all RAI LP token transfers (includes mint & burns)
 raw_lp_transfers AS (

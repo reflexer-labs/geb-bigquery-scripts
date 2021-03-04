@@ -1,6 +1,7 @@
 import json
 import requests
 import pandas as pd
+from google.cloud import bigquery
 
 def get_safe_owners(graph_url, block_number):
     query = '''
@@ -28,3 +29,23 @@ def get_safe_owners(graph_url, block_number):
         if len(s) < 1000:
             break
     return pd.DataFrame(results, columns=['block', 'safe', 'owner'])
+
+def write_csv_to_bq(client, table_id, schema, csv_file):
+    client.delete_table(table_id, not_found_ok=True)
+
+    job_config = bigquery.LoadJobConfig(
+            schema=schema,
+            #skip_leading_rows=1,
+        # The source format defaults to CSV, so the line below is optional.
+        source_format=bigquery.SourceFormat.CSV,
+    )
+
+    with open(csv_file, 'rb') as f:
+        load_job = client.load_table_from_file(
+            f, table_id, job_config=job_config
+        )  # Make an API request.
+
+    load_job.result()  # Waits for the job to complete.
+
+    destination_table = client.get_table(table_id)  # Make an API request.
+    print("Loaded {} rows to {}".format(destination_table.num_rows, table_id))
