@@ -5,12 +5,12 @@
 export GOOGLE_AUTH=<key file>
 ```
 
-Update `exclusions.csv` if needed.
+Update `exclusions.csv` with excluded EOAs, if needed.
 Double-check cutoff dates in query file.
 
 
 ## Running
-This is the general command, except for minting incentives(see below)
+This is the general format of the command, except for minting incentives(see below)
 
 `./run_incentives_query.sh <query_file> <exclusions_file> <output_file>`
 
@@ -35,7 +35,7 @@ Set CutoffDate in `staking-retroactive-reward-period1.sql` when period ends
 
 #### Run Minting only incentives
 
-*Minting only queries needs to map owners to SAFEs first, so it uses a separate script.*
+*Minting only queries needs to map EOAs to SAFEs first, so it uses a separate script.*
 
 
 ```
