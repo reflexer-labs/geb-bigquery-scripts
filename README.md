@@ -14,18 +14,18 @@ This is the general command, except for minting incentives(see below)
 
 `./run_incentives_query.sh <query_file> <exclusions_file> <output_file>`
 
-### Run PRAI query
+#### Run PRAI query
 ```
 ./run_incentives_query.sh queries/prai_airdrop_query.sql exclusions.csv prai.out
 ```
 
-### Run LP Staking for Period 1
+#### Run LP Staking for Period 1
 ```
 ./run_incentives_query.sh staking-retroactive-reward-period1.sql exclusions.csv staking1.out
 
 ```
 
-### Run LP Staking for Period 2
+#### Run LP Staking for Period 2
 
 Set CutoffDate in `staking-retroactive-reward-period1.sql` when period ends
 ```
@@ -33,7 +33,7 @@ Set CutoffDate in `staking-retroactive-reward-period1.sql` when period ends
 
 ```
 
-### Run Minting only incentives
+#### Run Minting only incentives
 
 *Minting only queries needs to map owners to SAFEs first, so it uses a separate script.*
 
