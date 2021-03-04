@@ -11,6 +11,7 @@ Double-check cutoff dates in query file.
 
 ## Running
 This is the general command, except for minting incentives(see below)
+
 `./run_incentives_query.sh <query_file> <exclusions_file> <output_file>`
 
 ### Run PRAI query
