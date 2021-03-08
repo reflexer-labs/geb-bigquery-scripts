@@ -5,3 +5,4 @@ key.json
 *.out
 *.tmp
 __pycache__
+!exclusions.csv
