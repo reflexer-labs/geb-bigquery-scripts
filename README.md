@@ -21,7 +21,7 @@ This is the general format of the command, except for minting incentives(see bel
 
 #### Run LP Staking for Period 1
 ```
-./run_incentives_query.sh staking-retroactive-reward-period1.sql exclusions.csv staking1.out
+./run_incentives_query.sh queries/staking-retroactive-reward-period1.sql exclusions.csv staking1.out
 
 ```
 
@@ -29,7 +29,7 @@ This is the general format of the command, except for minting incentives(see bel
 
 Set CutoffDate in `staking-retroactive-reward-period1.sql` when period ends
 ```
-./run_incentives_query.sh staking-retroactive-reward-period1.sql exclusions.csv staking2.out
+./run_incentives_query.sh queries/staking-retroactive-reward-period1.sql exclusions.csv staking2.out
 
 ```
 
@@ -39,6 +39,6 @@ Set CutoffDate in `staking-retroactive-reward-period1.sql` when period ends
 
 
 ```
-./run_incentives_query.sh minting-retroactive-reward.sql exclusions.csv minting.out
+./run_incentives_query.sh queries/minting-retroactive-reward.sql exclusions.csv minting.out
 
 ```
