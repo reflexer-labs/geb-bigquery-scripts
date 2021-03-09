@@ -1,25 +1,23 @@
+# Addresses
 DECLARE SAFEEngineAddress DEFAULT "0xcc88a9d330da1133df3a7bd823b95e52511a6962"; 
 DECLARE SAFEManagerAddress DEFAULT "0xefe0b4ca532769a3ae758fd82e1426a03a94f185";
-DECLARE ProxyRegistry DEFAULT "0x4678f0a6958e4d2bc4f1baf7bc52e8f3564f3fe4";
+DECLARE NullAddress DEFAULT "0x0000000000000000000000000000000000000000";
+
+# Dates
 DECLARE DeployDate DEFAULT TIMESTAMP("2021-02-13 12:33:18+00");                # UTC date of deploy
 DECLARE StartDate DEFAULT TIMESTAMP("2021-02-20 22:25:00+00");                 # UTC date when minting rewards started
 DECLARE CutoffDate DEFAULT TIMESTAMP("2021-02-26 13:49:00+00");                # UTC date when minting rewards stopped
 DECLARE CutoffBlock DEFAULT 11933211;                                          # Block when minting rewards stopped
-DECLARE TokenOffered DEFAULT 1000e18;  # Number of FLX to distribute in total
 
-# SAFE MANAGER Topic 
-#DECLARE ModifyCollTopic DEFAULT "0x4a1d86235388d42bee8b26817295ba354feb351780a0005e14a02303ac302df8"; # SAFE Manager Topic
-# SAFE Engine Topic 
+# Topics
 DECLARE ModifyCollTopic DEFAULT "0x182725621f9c0d485fb256f86699c82616bd6e4670325087fd08f643cab7d917"; # SAFE Engine Topic
-# SAFE Engine Topic 
 DECLARE TransferCollDebtTopic DEFAULT "0x4b49cc19514005253f36d0517c21b92404f50cc0d9e0c070af00b96e296b0835"; #
-# Build Proxy Topic
-DECLARE BuildProxyTopic DEFAULT "0x7dc7288b571724fc253653469146b103ac7feda79b8525a533f3c008a94ba963";
-# Constants
-DECLARE NullAddress DEFAULT "0x0000000000000000000000000000000000000000";
+DECLARE ConfiscateCollDebtTopic DEFAULT "0x9bef7b734be54aaed05e906c2ccf923767f44a93d136b674e212ce858a6d031c"; #
+
+# Rewards
+DECLARE TokenOffered DEFAULT 1000e18;  # Number of FLX to distribute in total
 DECLARE RewardRate DEFAULT TokenOffered / CAST(TIMESTAMP_DIFF(CutoffDate, StartDate, SECOND) AS NUMERIC);
 
-# Subtracts deltaDebt from src, adds deltaDebt to dst
 CREATE TEMP FUNCTION
   PARSE_TRANSFERSAFE_LOG(data STRING, topics ARRAY<STRING>)
   RETURNS STRUCT<`src` STRING, `dst` STRING, `deltaDebt` STRING>
@@ -40,24 +38,47 @@ CREATE TEMP FUNCTION
 OPTIONS
   ( library="https://storage.googleapis.com/ethlab-183014.appspot.com/ethjs-abi.js" );
 
+CREATE TEMP FUNCTION
+  PARSE_CONFISCATE_LOG(data STRING, topics ARRAY<STRING>)
+  RETURNS STRUCT<`safe` STRING, `deltaDebt` STRING>
+  LANGUAGE js AS """
+    var parsedEvent = {"anonymous":false,"inputs":[{"indexed":true,"internalType":"bytes32","name":"collateralType","type":"bytes32"},{"indexed":true,"internalType":"address","name":"safe","type":"address"},{"indexed":false,"internalType":"address","name":"collateralCounterparty","type":"address"},{"indexed":false,"internalType":"address","name":"debtCounterparty","type":"address"},{"indexed":false,"internalType":"int256","name":"deltaCollateral","type":"int256"},{"indexed":false,"internalType":"int256","name":"deltaDebt","type":"int256"},{"indexed":false,"internalType":"uint256","name":"globalUnbackedDebt","type":"uint256"}],"name":"ConfiscateSAFECollateralAndDebt","type":"event"};
+    return abi.decodeEvent(parsedEvent, data, topics, false);
+"""
+OPTIONS
+  ( library="https://storage.googleapis.com/ethlab-183014.appspot.com/ethjs-abi.js" );
+
 # Exclusion list of addresses that wont receive rewards, lower case only!
 WITH excluded_list AS (
   SELECT * FROM exclusions.excluded_safes as address),
 
-/*
 # Get all TransferSAFECollateralAndDebt events from SAFEEngine
-deltaDebts_orig AS (
+transferDebts_orig AS (
   SELECT *, PARSE_TRANSFERSAFE_LOG(data, topics) as transferSafe FROM `bigquery-public-data.crypto_ethereum.logs`
     WHERE block_timestamp >= DeployDate
       AND block_timestamp <= CutoffDate
       AND address = SAFEEngineAddress
       AND topics[offset(0)] = TransferCollDebtTopic
-)
+),
 
-*/
+transferDebts_dst AS (
+  SELECT block_timestamp, block_number, log_index, transferSafe.dst as safe, CAST(transferSafe.deltaDebt as BIGNUMERIC) as deltaDebt from transferDebts_orig
+),
+
+# Multiply src deltaDebt by -1 since it is losing debt
+transferDebts_src AS (
+  SELECT block_timestamp, block_number, log_index, transferSafe.src as safe, -1 * CAST(transferSafe.deltaDebt as BIGNUMERIC) as deltaDebt from transferDebts_orig
+),
+
+# Combine src and dst transfer debt
+transferDebts_raw AS (
+ SELECT * from transferDebts_dst
+   UNION ALL
+ SELECT * from transferDebts_src
+),
 
 # Get all ModifySAFECollateralization events from SAFEEngine
-deltaDebts_orig AS (
+modDebts_orig AS (
   SELECT *, PARSE_MODSAFE_LOG(data, topics) as safeMod FROM `bigquery-public-data.crypto_ethereum.logs`
     WHERE block_timestamp >= DeployDate
       AND block_timestamp <= CutoffDate
@@ -65,14 +86,33 @@ deltaDebts_orig AS (
       AND topics[offset(0)] = ModifyCollTopic
 ),
 
-
-deltaDebts_raw AS (
-  SELECT block_timestamp, block_number, log_index, safeMod.safe, safeMod.deltaDebt from deltaDebts_orig
+modDebts_raw AS (
+  SELECT block_timestamp, block_number, log_index, safeMod.safe, safeMod.deltaDebt from modDebts_orig
 ),
 
+# Get all ConfiscateSAFECollateralAndDebt events from SAFEEngine
+confDebts_orig AS (
+  SELECT *, PARSE_CONFISCATE_LOG(data, topics) as confiscate FROM `bigquery-public-data.crypto_ethereum.logs`
+    WHERE block_timestamp >= DeployDate
+      AND block_timestamp <= CutoffDate
+      AND address = SAFEEngineAddress
+      AND topics[offset(0)] = ConfiscateCollDebtTopic
+),
+
+confDebts_raw AS (
+  SELECT block_timestamp, block_number, log_index, confiscate.safe, confiscate.deltaDebt from confDebts_orig
+),
+
+
 # Cast delta debt to BIGNUMERIC
+# Combine safemod debt, confiscate debt and transfer debt
 deltaDebts as (
-  SELECT block_timestamp, block_number, log_index, safe as address, CAST(deltaDebt as BIGNUMERIC) as deltaDebt from deltaDebts_raw
+  SELECT block_timestamp, block_number, log_index, safe as address, CAST(deltaDebt as BIGNUMERIC) as deltaDebt from modDebts_raw
+UNION ALL
+SELECT block_timestamp, block_number, log_index, safe as address, CAST(deltaDebt as BIGNUMERIC) as deltaDebt from confDebts_raw
+UNION ALL
+SELECT block_timestamp, block_number, log_index, safe as address, CAST(deltaDebt as BIGNUMERIC) as deltaDebt from transferDebts_raw
+
 ),
 
 # Keep only records after the start date

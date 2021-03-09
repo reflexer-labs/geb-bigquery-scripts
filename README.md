@@ -39,6 +39,6 @@ Set CutoffDate in `staking-retroactive-reward-period1.sql` when period ends
 
 
 ```
-./run_incentives_query.sh queries/minting-retroactive-reward.sql exclusions.csv minting.out
+./run_minting_incentives_query.sh queries/minting-retroactive-reward.sql exclusions.csv minting.out
 
 ```
