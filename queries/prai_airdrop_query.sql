@@ -46,5 +46,7 @@ SELECT DISTINCT address FROM (
     )
 )
 
-WHERE address NOT IN (SELECT address FROM excluded_list)
+WHERE 
+  address NOT IN (SELECT address FROM excluded_list) 
+  AND address != "0x0000000000000000000000000000000000000000"
 ORDER BY address
