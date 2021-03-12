@@ -6,7 +6,7 @@ DECLARE NullAddress DEFAULT "0x0000000000000000000000000000000000000000";
 # Dates
 DECLARE DeployDate DEFAULT TIMESTAMP("2021-02-13 12:33:18+00");                # UTC date of deploy
 DECLARE StartDate DEFAULT TIMESTAMP("2021-02-20 22:25:00+00");                 # UTC date when minting rewards started
-DECLARE CutoffDate DEFAULT TIMESTAMP("2021-02-26 13:49:00+00");                # UTC date when minting rewards stopped
+DECLARE CutoffDate DEFAULT TIMESTAMP("2021-02-26 13:50:00+00");                # UTC date when minting rewards stopped
 DECLARE CutoffBlock DEFAULT 11933211;                                          # Block when minting rewards stopped
 
 # Topics
@@ -15,7 +15,7 @@ DECLARE TransferCollDebtTopic DEFAULT "0x4b49cc19514005253f36d0517c21b92404f50cc
 DECLARE ConfiscateCollDebtTopic DEFAULT "0x9bef7b734be54aaed05e906c2ccf923767f44a93d136b674e212ce858a6d031c"; #
 
 # Rewards
-DECLARE TokenOffered DEFAULT 1000e18;  # Number of FLX to distribute in total
+DECLARE TokenOffered DEFAULT 1884.548611111111e18;  # Number of FLX to distribute in total
 DECLARE RewardRate DEFAULT TokenOffered / CAST(TIMESTAMP_DIFF(CutoffDate, StartDate, SECOND) AS NUMERIC);
 
 CREATE TEMP FUNCTION

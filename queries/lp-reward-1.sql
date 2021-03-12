@@ -1,9 +1,9 @@
 # Config 
 DECLARE LPTokenAddress DEFAULT "0x8ae720a71622e824f576b4a8c03031066548a3b1";   # UNI-V2-ETH/RAI address, lower case only
 DECLARE DeployDate DEFAULT TIMESTAMP("2021-02-13 12:33:18+00");                # UTC date, Set it to just before the first ever LP token mint
-DECLARE StartDate DEFAULT TIMESTAMP("2021-02-17 13:49:00+00");                 # UTC date, Set it to when to start to distribute rewards
-DECLARE CutoffDate DEFAULT TIMESTAMP("2021-02-20 22:24:00+00");                # UTC date, Set it to when to stop to distribute rewards
-DECLARE TokenOffered DEFAULT 1000e18;                                          # Number of FLX to distribute in total
+DECLARE StartDate DEFAULT TIMESTAMP("2021-02-17 13:50:00+00");                 # UTC date, Set it to when to start to distribute rewards
+DECLARE CutoffDate DEFAULT TIMESTAMP("2021-02-20 22:25:00+00");                # UTC date, Set it to when to stop to distribute rewards
+DECLARE TokenOffered DEFAULT 2242.902777777778e18;                             # Number of FLX to distribute in total
 
 # Constants
 DECLARE NullAddress DEFAULT "0x0000000000000000000000000000000000000000";
