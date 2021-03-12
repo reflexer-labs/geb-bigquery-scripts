@@ -36,4 +36,4 @@ print(f"{len(rows)} final addresses")
 # Write results to file
 with open(output_file, 'w') as f:
     for row in rows:
-        f.write(f"{'='.join(map(str, row))}\n")
+        f.write(f"{','.join(map(str, row))}\n")

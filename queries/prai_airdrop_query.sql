@@ -2,7 +2,7 @@
 WITH excluded_list AS (
   SELECT address FROM `minting-incentives.exclusions.excluded_owners`)
 
-SELECT DISTINCT address FROM (
+SELECT DISTINCT address, 30 AS reward FROM (
     (
         # Query EOA that interacted with a specific list of contracts
         SELECT tx.from_address as address 

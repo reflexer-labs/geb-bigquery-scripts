@@ -1,8 +1,6 @@
 venv
 key.json
 *.json
-*.csv
 *.out
 *.tmp
 __pycache__
-!exclusions.csv
