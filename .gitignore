@@ -4,3 +4,5 @@ key.json
 *.out
 *.tmp
 __pycache__
+excluded_safes.csv
+safe_owners.csv

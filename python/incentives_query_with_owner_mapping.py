@@ -1,5 +1,6 @@
 import sys
 import os
+import re
 import pandas as pd
 from google.cloud import bigquery
 from util import get_safe_owners, write_csv_to_bq
@@ -8,9 +9,6 @@ GRAPH_URL = 'https://api.thegraph.com/subgraphs/name/reflexer-labs/rai-mainnet'
 BQ_SAFEOWNERS = 'safe_owners.safe_owners'
 BQ_EXCLUDED_SAFES = 'exclusions.excluded_safes'
 GOOGLE_AUTH = os.environ['GOOGLE_AUTH']
-
-# block used to get safe owners from the graph. This must match what's in query file!
-CUTOFF_BLOCK = 11933211
 
 query_file = sys.argv[1]
 exclusion_file = sys.argv[2]
@@ -22,6 +20,11 @@ if len(sys.argv) != 4:
 
 with open(query_file, 'r') as file:
     query = file.read()
+
+# Find the CutoffBlock in the query to populate the owner <> safe mapping at that block
+match = re.search('DECLARE CutoffBlock DEFAULT (\d+)', query)
+if match:
+    CUTOFF_BLOCK = int(match.group(1))
 
 # setup bq client
 client = bigquery.Client.from_service_account_json(GOOGLE_AUTH)
