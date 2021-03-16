@@ -10,35 +10,21 @@ Double-check cutoff dates in query file.
 
 
 ## Running
-This is the general format of the command, except for minting incentives(see below)
-
-`./run_incentives_query.sh <query_file> <exclusions_file> <output_file>`
-
-#### Run PRAI query
-```
-./run_incentives_query.sh queries/prai_airdrop_query.sql exclusions.csv prai.out
-```
-
-#### Run LP Staking for Period 1
-```
-./run_incentives_query.sh queries/staking-retroactive-reward-period1.sql exclusions.csv staking1.out
+This is the general format of the command
 
 ```
-
-#### Run LP Staking for Period 2
-
-Set CutoffDate in `staking-retroactive-reward-period1.sql` when period ends
-```
-./run_incentives_query.sh queries/staking-retroactive-reward-period1.sql exclusions.csv staking2.out
-
+./run_incentives_query.sh <query_file> <exclusions_file> <output_file>
+./run_incentives_query_with_owner_mapping.sh  <query_file> <exclusions_file> <output_file>
 ```
 
-#### Run Minting only incentives
-
-*Minting only queries needs to map EOAs to SAFEs first, so it uses a separate script.*
-
+Commands used to generate the distributions:
+```
+./run_incentives_query.sh queries/prai.sql exclusions.csv final_output/individual_query_results/prai.csv
+./run_incentives_query.sh queries/lp-reward-1.sql exclusions.csv final_output/individual_query_results/lp-reward-1.csv
+./run_incentives_query.sh queries/lp-reward-2.sql exclusions.csv final_output/individual_query_results/lp-reward-2.csv
+./run_incentives_query.sh queries/lp-reward-3.sql exclusions.csv final_output/individual_query_results/lp-reward-3.csv
+./run_incentives_query_with_owner_mapping.sh queries/minting-reward-1.sql exclusions.csv final_output/individual_query_results/minting-reward-1.csv
+./run_incentives_query_with_owner_mapping.sh queries/flat-reward.sql exclusions.csv final_output/individual_query_results/flat-reward-1.csv
 
 ```
-./run_minting_incentives_query.sh queries/minting-retroactive-reward.sql exclusions.csv minting.out
-
-```
+The `mint-lp-rewards-1.csv` was generated from another repo.

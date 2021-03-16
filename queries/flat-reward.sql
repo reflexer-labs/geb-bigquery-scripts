@@ -1,6 +1,5 @@
 DECLARE CutoffDate DEFAULT TIMESTAMP("2021-03-18 18:10:00+00");
 # Snapshot for the safe ownership, use the block of the CutoffDate
-# !! The table needs to be preffiled with the safe mapping at the right block
 DECLARE CutoffBlock DEFAULT 12042678; 
 DECLARE TimeThreshold DEFAULT 604800; # One week
 DECLARE Reward DEFAULT 1;
