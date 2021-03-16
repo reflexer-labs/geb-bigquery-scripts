@@ -23,9 +23,16 @@ for distribution in distributions:
     joined = pd.merge(joined,distribution, how='outer', on='Address')
 
 joined = joined.fillna(0)
+# Sum all individual distribution
 joined["Total"] = joined.sum(axis=1)
+# Sort decreasing
 joined = joined.sort_values('Total', ascending=False)
-joined.to_csv("final_output/per_campaign.csv",index=False)
+# Remove addresses with 0 rewards
+joined.drop(joined[joined["Total"] <= 0].index, inplace=True)
+# 9 decimal max
+joined["Total"] = joined["Total"].apply(lambda x: f'{x:.9f}')
 
+# Save
+joined.to_csv("final_output/per_campaign.csv",index=False)
 summed = joined[["Address", "Total"]]
 summed.to_csv("final_output/summed.csv",index=False)
