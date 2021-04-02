@@ -25,6 +25,7 @@ Commands used to generate the distributions:
 ./run_incentives_query.sh queries/lp-reward-3.sql exclusions.csv final_output/individual_query_results/lp-reward-3.csv
 ./run_incentives_query_with_owner_mapping.sh queries/minting-reward-1.sql exclusions.csv final_output/individual_query_results/minting-reward-1.csv
 ./run_incentives_query_with_owner_mapping.sh queries/flat-reward.sql exclusions.csv final_output/individual_query_results/flat-reward-1.csv
+./run_incentives_query.sh queries/cream-borrower.sql exclusions.csv final_output/individual_query_results/cream-borrower-1.csv
 
 ```
 The `mint-lp-rewards-1.csv` was generated from another repo.
