@@ -6,7 +6,7 @@ DECLARE CTokenAddress DEFAULT "0xf8445c529d363ce114148662387eba5e62016e20"; -- C
 DECLARE TokenOffered DEFAULT 1000e18; -- Number of FLX to distribute in total
 
 -- Constants
-DECLARE RewardRate DEFAULT TokenOffered / CAST(TIMESTAMP_DIFF(CutoffDate, StartDate, SECOND) AS NUMERIC); -- FLX dsitributed per second
+DECLARE RewardRate DEFAULT TokenOffered / CAST(TIMESTAMP_DIFF(CutoffDate, StartDate, SECOND) AS BIGNUMERIC); -- FLX dsitributed per second
 DECLARE BorrowTopic DEFAULT "0x13ed6866d4e1ee6da46f845c46d7e54120883d75c5ea9a2dacc1c4ca8984ab80"; -- Borrow event topic0
 DECLARE RepayBorrowTopic DEFAULT "0x1a2a22cb034d26d1854bdc6666a5b91fe25efbbb5dcad3b0355478d6f5c362a1"; -- Repay event topic0
 DECLARE AccrueInterestTopic DEFAULT "0x4dec04e750ca11537cabcd8a9eab06494de08da3735bc8871cd41250e190bc04"; -- Repay event topic0
@@ -243,9 +243,9 @@ with_start_events AS (
 -- Add the delta_reward_per_token (increase in reward_per_token)
 ctoken_deltas AS (
   SELECT *, 
-      COALESCE(CAST(TIMESTAMP_DIFF(block_timestamp, LAG(block_timestamp) OVER( ORDER BY block_timestamp, log_index), SECOND) AS NUMERIC), 0) AS delta_t,
+      COALESCE(CAST(TIMESTAMP_DIFF(block_timestamp, LAG(block_timestamp) OVER( ORDER BY block_timestamp, log_index), SECOND) AS BIGNUMERIC), 0) AS delta_t,
       IF(total_supply - delta_balance = 0, 0,
-        COALESCE(CAST(TIMESTAMP_DIFF(block_timestamp, LAG(block_timestamp) OVER( ORDER BY block_timestamp, log_index), SECOND) AS NUMERIC), 0) * RewardRate / (total_supply - delta_balance)
+        COALESCE(CAST(TIMESTAMP_DIFF(block_timestamp, LAG(block_timestamp) OVER( ORDER BY block_timestamp, log_index), SECOND) AS BIGNUMERIC), 0) * RewardRate / (total_supply - delta_balance)
       ) AS delta_reward_per_token
       
   FROM with_start_events),
@@ -278,6 +278,6 @@ final_reward_list AS (
 )
 
 -- Output results
-SELECT address, CAST(reward AS NUMERIC)/1e18 AS reward
+SELECT address, reward/1e18 AS reward
 FROM final_reward_list 
 ORDER BY reward DESC
