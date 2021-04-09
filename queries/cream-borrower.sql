@@ -134,7 +134,10 @@ with_start_events AS (
 cream_deltas AS (
   SELECT *, 
       COALESCE(CAST(TIMESTAMP_DIFF(block_timestamp, LAG(block_timestamp) OVER( ORDER BY block_timestamp, log_index), SECOND) AS NUMERIC), 0) AS delta_t,
-      COALESCE(CAST(TIMESTAMP_DIFF(block_timestamp, LAG(block_timestamp) OVER( ORDER BY block_timestamp, log_index), SECOND) AS NUMERIC), 0) * RewardRate / (total_supply - delta_balance) AS delta_reward_per_token
+      IF(total_supply - delta_balance = 0, 0,
+        COALESCE(CAST(TIMESTAMP_DIFF(block_timestamp, LAG(block_timestamp) OVER( ORDER BY block_timestamp, log_index), SECOND) AS NUMERIC), 0) * RewardRate / (total_supply - delta_balance)
+      ) AS delta_reward_per_token
+      
   FROM with_start_events),
 
 # Calculated the actual reward_per_token from the culmulative delta
