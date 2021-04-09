@@ -13,7 +13,7 @@ DECLARE RewardRate DEFAULT TokenOffered / CAST(TIMESTAMP_DIFF(CutoffDate, StartD
 # Borrow event parse function
 CREATE TEMP FUNCTION
   PARSE_BORROW_EVENT(data STRING, topics ARRAY<STRING>)
-  RETURNS STRUCT<`borrower` STRING, `accountBorrows` STRING, `totalBorrows` STRING>
+  RETURNS STRUCT<`borrower` STRING, `accountBorrows` STRING, `totalBorrows` STRING, `borrowAmount` STRING>
   LANGUAGE js AS """
     var parsedEvent = {"anonymous": false,"inputs": [{"indexed": false,"internalType": "address","name": "borrower","type": "address"},{"indexed": false,"internalType": "uint256","name": "borrowAmount","type": "uint256"},{"indexed": false,"internalType": "uint256","name": "accountBorrows","type": "uint256"},{"indexed": false,"internalType": "uint256","name": "totalBorrows","type": "uint256"}],"name": "Borrow","type": "event"};
     return abi.decodeEvent(parsedEvent, data, topics, false);
@@ -24,7 +24,7 @@ OPTIONS
 # Repay event parse function
 CREATE TEMP FUNCTION
   PARSE_REPAY_BORROW_EVENT(data STRING, topics ARRAY<STRING>)
-  RETURNS STRUCT<`borrower` STRING, `accountBorrows` STRING, `totalBorrows` STRING>
+  RETURNS STRUCT<`borrower` STRING, `accountBorrows` STRING, `totalBorrows` STRING, `repayAmount` STRING>
   LANGUAGE js AS """
     var parsedEvent = {"anonymous": false,"inputs": [{"indexed": false,"internalType": "address","name": "payer","type": "address"},{"indexed": false,"internalType": "address","name": "borrower","type": "address"},{"indexed": false,"internalType": "uint256","name": "repayAmount","type": "uint256"},{"indexed": false,"internalType": "uint256","name": "accountBorrows","type": "uint256"},{"indexed": false,"internalType": "uint256","name": "totalBorrows","type": "uint256"}],"name": "RepayBorrow","type": "event"};
     return abi.decodeEvent(parsedEvent, data, topics, false);
@@ -63,6 +63,7 @@ cream_parsed_events AS (
     log_index, params.borrower as address, 
     CAST(params.accountBorrows as BIGNUMERIC) as balance, 
     CAST(params.totalBorrows as BIGNUMERIC) as total_supply,
+    CAST(params.borrowAmount as BIGNUMERIC) as delta_balance,
   FROM borrow_event
   
   UNION ALL
@@ -73,6 +74,7 @@ cream_parsed_events AS (
     params.borrower as address, 
     CAST(params.accountBorrows as BIGNUMERIC) as balance, 
     CAST(params.totalBorrows as BIGNUMERIC) as total_supply,
+    -1 * CAST(params.repayAmount as BIGNUMERIC) as delta_balance,
   FROM repay_borrow_event
 ),
 
@@ -82,7 +84,7 @@ cream_parsed_events_before_start AS (
   WHERE block_timestamp < StartDate
 ),
 
-# Total suuply (= total debt) at the start of the distribution
+# Total supply (= total debt) at the start of the distribution
 # !! This ignore the accrued intrest since the last borrow/repay event until the start of the distribution
 initial_total_supply as (
   SELECT total_supply 
@@ -102,13 +104,15 @@ cream_balance_before_start AS (
     # Set it to -1 to be sure it comes before everything else in the start block
     -1 AS log_index,
     address,
-    balance,
-    (SELECT total_supply FROM initial_total_supply) as total_supply
+    balance AS balance,
+    (SELECT total_supply FROM initial_total_supply) as total_supply,
+    # Delta_balance is the full balance at start
+    balance AS delta_balance,
   FROM (
     SELECT 
       balance, 
-      address, 
-      RANK() OVER (PARTITION BY address ORDER BY block_timestamp DESC, log_index DESC) as rank 
+      address,
+      RANK() OVER (PARTITION BY address ORDER BY block_timestamp DESC, log_index DESC) as rank
     FROM cream_parsed_events_before_start
   ) WHERE rank=1
 ),
@@ -117,7 +121,7 @@ cream_balance_before_start AS (
 
 # Add initial balance events for all account
 with_start_events AS (
-  SELECT block_timestamp, log_index, address, balance, total_supply
+  SELECT block_timestamp, log_index, address, balance, total_supply, delta_balance
   FROM cream_parsed_events
   WHERE block_timestamp >= StartDate
   
@@ -130,8 +134,7 @@ with_start_events AS (
 cream_deltas AS (
   SELECT *, 
       COALESCE(CAST(TIMESTAMP_DIFF(block_timestamp, LAG(block_timestamp) OVER( ORDER BY block_timestamp, log_index), SECOND) AS NUMERIC), 0) AS delta_t,
-      COALESCE(CAST(TIMESTAMP_DIFF(block_timestamp, LAG(block_timestamp) OVER( ORDER BY block_timestamp, log_index), SECOND) AS NUMERIC), 0) * RewardRate / (LAG(total_supply) OVER(ORDER BY block_timestamp, log_index)) AS delta_reward_per_token
-
+      COALESCE(CAST(TIMESTAMP_DIFF(block_timestamp, LAG(block_timestamp) OVER( ORDER BY block_timestamp, log_index), SECOND) AS NUMERIC), 0) * RewardRate / (total_supply - delta_balance) AS delta_reward_per_token
   FROM with_start_events),
 
 # Calculated the actual reward_per_token from the culmulative delta
@@ -142,8 +145,22 @@ cream_reward_per_token AS (
 ),
 
 # Build a simple list of all paticipants
-all_addresses AS (
-  SELECT DISTINCT address FROM cream_reward_per_token
+-- all_addresses AS (
+--   SELECT DISTINCT address FROM cream_reward_per_token
+-- ),
+
+final_balance as (
+  SELECT 
+    address,
+    balance,
+  FROM  (
+    SELECT
+      address,
+      balance,
+      RANK() OVER (PARTITION BY address ORDER BY block_timestamp DESC, log_index DESC) as rank 
+    FROM cream_reward_per_token
+   ) 
+  WHERE rank=1
 ),
 
 # Add cutoff events like if everybody had repay everything on cutoff date. We need this to account for people that are still have balance on cutoff date.
@@ -153,7 +170,8 @@ with_cutoff_events AS (
     log_index, 
     address, 
     balance,
-    reward_per_token  
+    reward_per_token,
+    delta_balance,
   FROM cream_reward_per_token
   
   UNION ALL  
@@ -164,19 +182,20 @@ with_cutoff_events AS (
     # Set it to the highest log index to be sure it comes last
     (SELECT MAX(log_index) FROM cream_reward_per_token) AS log_index,
     address AS address,
-    # You unstaked so your balance is 0
+    # You repay so your balance is 0
     0 AS balance,
     # ⬇ reward_per_token on cutoff date                            ⬇ Time passed since the last update of reward_per_token                                                                                   ⬇ latest total_supply !! This ignore accrued intrest between the last change and Cutoff date
-    (SELECT MAX(reward_per_token) FROM cream_reward_per_token) + COALESCE(CAST(TIMESTAMP_DIFF(CutoffDate, (SELECT MAX(block_timestamp) FROM cream_reward_per_token), SECOND) AS NUMERIC), 0) * RewardRate / (SELECT total_supply FROM cream_reward_per_token ORDER BY block_timestamp DESC LIMIT 1) 
-    AS reward_per_token
-  FROM all_addresses
+    (SELECT MAX(reward_per_token) FROM cream_reward_per_token) + COALESCE(CAST(TIMESTAMP_DIFF(CutoffDate, (SELECT MAX(block_timestamp) FROM cream_reward_per_token), SECOND) AS NUMERIC), 0) * RewardRate / (SELECT total_supply FROM cream_reward_per_token ORDER BY block_timestamp DESC LIMIT 1) AS reward_per_token,
+    # You repay everything so your delta is equal -1 * currentBalance
+    -1 * balance as delta_balance
+  FROM final_balance
 ),
 
 # Credit rewards, basically the earned() function from a staking contract
 cream_earned AS (
   SELECT *,
     #                       ⬇ userRewardPerTokenPaid                                                                             ⬇ balance just before 
-    (reward_per_token - COALESCE(LAG(reward_per_token,1) OVER(PARTITION BY address ORDER BY block_timestamp, log_index), 0)) * COALESCE(LAG(balance) OVER(PARTITION BY address ORDER BY block_timestamp, log_index),0) AS earned,
+    (reward_per_token - COALESCE(LAG(reward_per_token,1) OVER(PARTITION BY address ORDER BY block_timestamp, log_index), 0)) * COALESCE(balance - delta_balance, 0) AS earned,
   FROM with_cutoff_events
 ),
 
@@ -191,3 +210,5 @@ final_reward_list AS (
 SELECT address, CAST(reward AS NUMERIC)/1e18 AS reward
 FROM final_reward_list 
 ORDER BY reward DESC
+
+# SELECT * FROM final_balance # ORDER BY block_timestamp
