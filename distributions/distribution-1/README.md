@@ -86,8 +86,7 @@ Total FLX distributed: 105 FLX
 
 1 FLX reward for each address that kept a safe open with more than zero debt for at least a week cumulated.
 
--Period: From Feb-13-2021 (Initial deployment of the system) Until April-13-2021 12:50 UTC
-
+- Period: From Feb-13-2021 (Initial deployment of the system) Until April-13-2021 12:50 UTC
 - Query `./flat-reward.sql`
 - Command: `./run_incentives_query_with_owner_mapping.sh ./distributions/distribution-1/queries/flat-reward.sql exclusions.csv distributions/distribution-1/query-results/flat-reward.csv`
 
