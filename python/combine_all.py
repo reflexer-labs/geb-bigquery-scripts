@@ -3,7 +3,7 @@ import pandas as pd
 
 # Combine the output of the individual distributions into one
 
-base_path = "final_output/individual_query_results/"
+base_path = sys.argv[1]
 files = os.listdir(base_path)
 
 distributions = []
