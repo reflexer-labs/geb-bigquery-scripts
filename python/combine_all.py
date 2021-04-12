@@ -1,4 +1,5 @@
 import os
+import sys
 import pandas as pd
 
 # Combine the output of the individual distributions into one
@@ -8,7 +9,7 @@ files = os.listdir(base_path)
 
 distributions = []
 for file in files:
-    csv = pd.read_csv(base_path + file, header=None)
+    csv = pd.read_csv(base_path + "/"+ file, header=None)
 
     if csv.iloc[0][0][:2] != "0x":
         raise Exception('Distribution file should not have header')
@@ -33,6 +34,6 @@ joined.drop(joined[joined["Total"] <= 0].index, inplace=True)
 joined["Total"] = joined["Total"].apply(lambda x: f'{x:.9f}')
 
 # Save
-joined.to_csv("final_output/per_campaign.csv",index=False)
+joined.to_csv(base_path + "/../per_campaign.csv",index=False)
 summed = joined[["Address", "Total"]]
-summed.to_csv("final_output/summed.csv",index=False)
+summed.to_csv(base_path + "/../summed.csv",index=False)

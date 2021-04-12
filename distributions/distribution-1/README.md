@@ -5,6 +5,10 @@ Distribution date: April-15-2021
 - Start: Before PRAI deployment on 24.10.2020
 - Cutoff-date: April-13-2021 12:50pm UTC
 
+Results of the overall distribution are in `per_campaign.csv` for individual query results for each distribution and in `summed.csv` which is the final file used for generating the Merkle root for the distributor contract.
+
+To combine the individual query results run `./run_combine.sh ./distributions/distribution-1/query-results`
+
 ## Individual distributions
 
 ### PRAI users
