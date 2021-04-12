@@ -1,7 +1,7 @@
 -- Config 
 DECLARE DeployDate DEFAULT TIMESTAMP("2021-03-18 00:00:00+00"); # UTC date, Set it to just before the first ever LP token mint
 DECLARE StartDate DEFAULT TIMESTAMP("2021-03-20 00:00:00+00"); # UTC date, Set it to when to start to distribute rewards
-DECLARE CutoffDate DEFAULT TIMESTAMP("2021-03-25 12:50:00+00"); # UTC date, Set it to when to stop to distribute rewards
+DECLARE CutoffDate DEFAULT TIMESTAMP("2021-03-25 12:50:00+00"); # UTC date, Set it to when to stop to d istribute rewards
 DECLARE CTokenAddress DEFAULT "0x8ad7472631695420626c17ee0f8cecfea480caff"; # CToken contract
 DECLARE TokenOffered DEFAULT 1000e18; -- Number of FLX to distribute in total
 
@@ -206,12 +206,10 @@ ctoken_final_states AS (
     -- Set it to the highest log index to be sure it comes last
     (SELECT MAX(log_index) FROM ctoken_parsed_events) AS log_index,
     address AS address,
-    -- You repay everything so your balance is 0
-    0 AS balance,
+    balance,
     -- Final total_supply
     (SELECT total_supply FROM final_state_event) AS total_supply,
-    -- You repay everything so your delta is equal -1 * currentBalance
-    -1 * balance as delta_balance
+    0 as delta_balance
   FROM final_balance
 ),
 

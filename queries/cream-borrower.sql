@@ -206,12 +206,10 @@ ctoken_final_states AS (
     -- Set it to the highest log index to be sure it comes last
     (SELECT MAX(log_index) FROM ctoken_parsed_events) AS log_index,
     address AS address,
-    -- You repay everything so your balance is 0
-    0 AS balance,
+    balance,
     -- Final total_supply
     (SELECT total_supply FROM final_state_event) AS total_supply,
-    -- You repay everything so your delta is equal -1 * currentBalance
-    -1 * balance as delta_balance
+    0 as delta_balance
   FROM final_balance
 ),
 
