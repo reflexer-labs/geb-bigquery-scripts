@@ -41,7 +41,7 @@ Total FLX distributed: 2242.9028
 
 ```
 ./run_incentives_query.sh ./distributions/distribution-1/queries/lp-reward-2.sql exclusions.csv distributions/distribution-1/query-results/lp-reward-2.csv
-./run_incentives_query_with_owner_mapping.sh ./distributions/distribution-1/queries/minting-reward-1.sql exclusions.csv distributions/distribution-1/query-results/minting-reward-2.csv
+./run_incentives_query_with_owner_mapping.sh ./distributions/distribution-1/queries/minting-reward-1.sql exclusions.csv distributions/distribution-1/query-results/minting-reward-1.csv
 
 ```
 
@@ -94,4 +94,4 @@ Total FLX distributed: 90 FLX
 - Query `./flat-reward.sql`
 - Command: `./run_incentives_query_with_owner_mapping.sh ./distributions/distribution-1/queries/flat-reward.sql exclusions.csv distributions/distribution-1/query-results/flat-reward.csv`
 
-Total FLX distributed: TBD
+Total FLX distributed: 1211
