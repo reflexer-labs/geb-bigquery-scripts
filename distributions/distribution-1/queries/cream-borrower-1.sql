@@ -273,9 +273,16 @@ final_reward_list AS (
   SELECT address, SUM(earned) AS reward
   FROM ctoken_earned
   GROUP BY address
+),
+
+-- Normalize result to distribute the exact amount of token
+-- This is needed to address the inaccuracies stated above
+final_normalized_reward_list AS (
+  SELECT address, reward * TokenOffered / (SELECT SUM(reward) FROM final_reward_list) AS reward 
+  FROM final_reward_list
 )
 
 -- Output results
 SELECT address, reward/1e18 AS reward
-FROM final_reward_list 
+FROM final_normalized_reward_list 
 ORDER BY reward DESC
