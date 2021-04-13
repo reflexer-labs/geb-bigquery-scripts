@@ -9,7 +9,7 @@ DECLARE TokenOffered DEFAULT 105e18; -- Number of FLX to distribute in total
 DECLARE RewardRate DEFAULT TokenOffered / CAST(TIMESTAMP_DIFF(CutoffDate, StartDate, SECOND) AS BIGNUMERIC); -- FLX dsitributed per second
 DECLARE BorrowTopic DEFAULT "0x13ed6866d4e1ee6da46f845c46d7e54120883d75c5ea9a2dacc1c4ca8984ab80"; -- Borrow event topic0
 DECLARE RepayBorrowTopic DEFAULT "0x1a2a22cb034d26d1854bdc6666a5b91fe25efbbb5dcad3b0355478d6f5c362a1"; -- Repay event topic0
-DECLARE AccrueInterestTopic DEFAULT "0x4dec04e750ca11537cabcd8a9eab06494de08da3735bc8871cd41250e190bc04"; -- Repay event topic0
+DECLARE AccrueInterestTopic DEFAULT "0x4dec04e750ca11537cabcd8a9eab06494de08da3735bc8871cd41250e190bc04"; -- Accrue intrest event topic0
 
 -- Borrow event parse function
 CREATE TEMP FUNCTION
