@@ -1,6 +1,6 @@
 DECLARE CutoffDate DEFAULT TIMESTAMP("2021-04-13 12:50:00+00");
 # Snapshot for the safe ownership, use the block of the CutoffDate
-DECLARE CutoffBlock DEFAULT ###TODO###; 
+DECLARE CutoffBlock DEFAULT 12231841; 
 DECLARE TimeThreshold DEFAULT 604800; # One week
 DECLARE Reward DEFAULT 1;
 
