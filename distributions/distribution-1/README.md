@@ -74,7 +74,7 @@ Total FLX distributed: 24048
 - Query `cream-borrower-1.sql`
 - Command `./run_incentives_query.sh ./distributions/distribution-1/queries/cream-borrower-1.sql exclusions.csv distributions/distribution-1/query-results/cream-borrower-1.csv`
 
-Total FLX distributed: 300 FLX
+Total FLX distributed: 175 FLX
 
 ### Cream borrower 2
 
@@ -82,9 +82,9 @@ Total FLX distributed: 300 FLX
 
 - Period: From April-7-2021 12:50 UTC Until April-13-2021 12:50 UTC
 - Query `cream-borrower-1.sql`
-- Command `./run_incentives_query.sh ./distributions/distribution-1/queries/cream-borrower-1.sql exclusions.csv distributions/distribution-1/query-results/cream-borrower-2.csv`
+- Command `./run_incentives_query.sh ./distributions/distribution-1/queries/cream-borrower-2.sql exclusions.csv distributions/distribution-1/query-results/cream-borrower-2.csv`
 
-Total FLX distributed: 105 FLX
+Total FLX distributed: 90 FLX
 
 ### Flat FLX reward for Safe owner
 

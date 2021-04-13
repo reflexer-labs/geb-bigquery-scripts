@@ -3,7 +3,7 @@ DECLARE DeployDate DEFAULT TIMESTAMP("2021-03-24 17:48:00+00"); -- UTC date, Set
 DECLARE StartDate DEFAULT TIMESTAMP("2021-03-31 12:50:00+00"); -- UTC date, Set it to when to start to distribute rewards
 DECLARE CutoffDate DEFAULT TIMESTAMP("2021-04-07 12:50:00+00"); -- UTC date, Set it to when to stop to distribute rewards
 DECLARE CTokenAddress DEFAULT "0xf8445c529d363ce114148662387eba5e62016e20"; -- CToken contract
-DECLARE TokenOffered DEFAULT 300e18; -- Number of FLX to distribute in total
+DECLARE TokenOffered DEFAULT 175e18; -- Number of FLX to distribute in total
 
 -- Constants
 DECLARE RewardRate DEFAULT TokenOffered / CAST(TIMESTAMP_DIFF(CutoffDate, StartDate, SECOND) AS BIGNUMERIC); -- FLX dsitributed per second
