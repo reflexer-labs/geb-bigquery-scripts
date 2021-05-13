@@ -51,4 +51,7 @@ Total FLX distributed: 435 FLX
 
 ### Loopring LP
 
-TODO
+50 FLX in total for the loopring liquidity mining campaign round 7
+See: `https://medium.com/loopring-protocol/loopring-l2-liquidity-mining-round-7-36a954d2d78`
+
+- Period: From April-29-2021 00:00 UTC Until May-10-2021 23:59pm UTC
