@@ -12,6 +12,7 @@ To combine the individual query results run `./run_combine.sh ./distributions/di
 ## Individual distributions
 
 ### RAI RAI/ETH UNI-V2 LP
+
 ### RAI RAI/DAI UNI-V2 LP
 
 ### Cream borrower
@@ -24,13 +25,17 @@ To combine the individual query results run `./run_combine.sh ./distributions/di
 
 Total FLX distributed: 450 FLX
 
+### Fuse borrower
 
+15 FLX per day to RAI borrowers pro rata to the borrow amount.
 
+- Period: From April-14-2021 12:50pm UTC Until May-13-2021 12:50pm UTC
+- Query `fuse-borrower.sql`
+- Command `./run_incentives_query.sh ./distributions/distribution-2/queries/fuse-borrower.sql exclusions.csv distributions/distribution-2/query-results/fuse-borrower.csv`
 
-
+Total FLX distributed: 435 FLX
 
 =======================================================================
-
 
 ### PRAI users
 
