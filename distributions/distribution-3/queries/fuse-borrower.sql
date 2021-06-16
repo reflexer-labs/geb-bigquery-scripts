@@ -1,22 +1,22 @@
 -- Config 
-DECLARE DeployDate DEFAULT TIMESTAMP("2021-05-08 16:00:00+00"); -- UTC date, Set it to just before the first ever LP token mint
-DECLARE StartDate DEFAULT TIMESTAMP("2021-05-19 16:00:00+00"); -- UTC date, Set it to when to start to distribute rewards
+DECLARE DeployDate DEFAULT TIMESTAMP("2021-04-8 20:00:00+00"); -- UTC date, Set it to just before the first ever LP token mint
+DECLARE StartDate DEFAULT TIMESTAMP("2021-05-13 12:50:00+00"); -- UTC date, Set it to when to start to distribute rewards
 DECLARE CutoffDate DEFAULT TIMESTAMP("2021-06-17 12:50:00+00"); -- UTC date, Set it to when to stop to distribute rewards
-DECLARE CTokenAddress DEFAULT "0xa7c3304462b169c71f8edc894ea9d32879fb4823"; -- Kashi RAI/DAI
-DECLARE TokenOffered DEFAULT 290e18; -- Number of FLX to distribute in total
+DECLARE CTokenAddress DEFAULT "0x752f119bd4ee2342ce35e2351648d21962c7cafe"; -- CToken contract
+DECLARE TokenOffered DEFAULT 525e18; -- Number of FLX to distribute in total
 
 -- Constants
 DECLARE RewardRate DEFAULT TokenOffered / CAST(TIMESTAMP_DIFF(CutoffDate, StartDate, SECOND) AS BIGNUMERIC); -- FLX dsitributed per second
-DECLARE BorrowTopic DEFAULT "0x3a5151e57d3bc9798e7853034ac52293d1a0e12a2b44725e75b03b21f86477a6"; -- Borrow event topic0
-DECLARE RepayBorrowTopic DEFAULT "0xc8e512d8f188ca059984b5853d2bf653da902696b8512785b182b2c813789a6e"; -- Repay event topic0 Repay tx eg 0xcafeea8163a7be20b2d3f631bcfb6c1190c35d21efd3e08fa4d47f7fba2239d1
-DECLARE AccrueInterestTopic DEFAULT "0x33af5ce86e8438eff54589f85332916444457dfa8685493fbd579b809097026b"; -- Accrue intrest event topic0
+DECLARE BorrowTopic DEFAULT "0x13ed6866d4e1ee6da46f845c46d7e54120883d75c5ea9a2dacc1c4ca8984ab80"; -- Borrow event topic0
+DECLARE RepayBorrowTopic DEFAULT "0x1a2a22cb034d26d1854bdc6666a5b91fe25efbbb5dcad3b0355478d6f5c362a1"; -- Repay event topic0
+DECLARE AccrueInterestTopic DEFAULT "0x4dec04e750ca11537cabcd8a9eab06494de08da3735bc8871cd41250e190bc04"; -- Accrue intrest event topic0
 
 -- Borrow event parse function
 CREATE TEMP FUNCTION
   PARSE_BORROW_EVENT(data STRING, topics ARRAY<STRING>)
-  RETURNS STRUCT<`from` STRING, `to` STRING, `amount` STRING, `feeAmount` STRING, `part` STRING>
+  RETURNS STRUCT<`borrower` STRING, `accountBorrows` STRING, `totalBorrows` STRING, `borrowAmount` STRING>
   LANGUAGE js AS """
-    var parsedEvent = {"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"from","type":"address"},{"indexed":true,"internalType":"address","name":"to","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"feeAmount","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"part","type":"uint256"}],"name":"LogBorrow","type":"event"};
+    var parsedEvent = {"anonymous": false,"inputs": [{"indexed": false,"internalType": "address","name": "borrower","type": "address"},{"indexed": false,"internalType": "uint256","name": "borrowAmount","type": "uint256"},{"indexed": false,"internalType": "uint256","name": "accountBorrows","type": "uint256"},{"indexed": false,"internalType": "uint256","name": "totalBorrows","type": "uint256"}],"name": "Borrow","type": "event"};
     return abi.decodeEvent(parsedEvent, data, topics, false);
 """
 OPTIONS
@@ -25,9 +25,9 @@ OPTIONS
 -- Repay event parse function
 CREATE TEMP FUNCTION
   PARSE_REPAY_BORROW_EVENT(data STRING, topics ARRAY<STRING>)
-  RETURNS STRUCT<`from` STRING, `to` STRING, `amount` STRING, `part` STRING>
+  RETURNS STRUCT<`borrower` STRING, `accountBorrows` STRING, `totalBorrows` STRING, `repayAmount` STRING>
   LANGUAGE js AS """
-    var parsedEvent = {"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"from","type":"address"},{"indexed":true,"internalType":"address","name":"to","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"part","type":"uint256"}],"name":"LogRepay","type":"event"};
+    var parsedEvent = {"anonymous": false,"inputs": [{"indexed": false,"internalType": "address","name": "payer","type": "address"},{"indexed": false,"internalType": "address","name": "borrower","type": "address"},{"indexed": false,"internalType": "uint256","name": "repayAmount","type": "uint256"},{"indexed": false,"internalType": "uint256","name": "accountBorrows","type": "uint256"},{"indexed": false,"internalType": "uint256","name": "totalBorrows","type": "uint256"}],"name": "RepayBorrow","type": "event"};
     return abi.decodeEvent(parsedEvent, data, topics, false);
 """
 OPTIONS
@@ -36,9 +36,9 @@ OPTIONS
 -- AccrueIntrest event parse function
 CREATE TEMP FUNCTION
   PARSE_ACCRUE_INTEREST_EVENT(data STRING, topics ARRAY<STRING>)
-  RETURNS STRUCT<`accruedAmount` STRING, `feeFraction` STRING, `rate` STRING, `utilization` STRING>
+  RETURNS STRUCT<`borrowIndex` STRING>
   LANGUAGE js AS """
-    var parsedEvent = {"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint256","name":"accruedAmount","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"feeFraction","type":"uint256"},{"indexed":false,"internalType":"uint64","name":"rate","type":"uint64"},{"indexed":false,"internalType":"uint256","name":"utilization","type":"uint256"}],"name":"LogAccrue","type":"event"};
+    var parsedEvent = {"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint256","name":"cashPrior","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"interestAccumulated","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"borrowIndex","type":"uint256"},{"indexed":false,"internalType":"uint256","name":"totalBorrows","type":"uint256"}],"name":"AccrueInterest","type":"event"};
     return abi.decodeEvent(parsedEvent, data, topics, false);
 """
 OPTIONS
@@ -48,7 +48,7 @@ OPTIONS
 
 -- Get all borrow and repay borrow events for a CToken contract
 WITH ctoken_raw_events AS (
-  SELECT data, topics, block_number, block_timestamp, log_index, transaction_hash FROM `bigquery-public-data.crypto_ethereum.logs`
+  SELECT data, topics, block_number, block_timestamp, log_index FROM `bigquery-public-data.crypto_ethereum.logs`
     WHERE block_timestamp >= DeployDate
       AND block_timestamp <= CutoffDate
       AND address = CTokenAddress
@@ -76,15 +76,21 @@ accrue_interest_event AS (
   WHERE topics[offset(0)] = AccrueInterestTopic
 ),
 
+accrue_interest_parse_event AS (
+SELECT block_number, CAST(params.borrowIndex AS BIGNUMERIC) / 1e18 AS borrow_index
+FROM accrue_interest_event
+),
+
 -- Union borrows and repays
 borrows_and_repays AS (
   SELECT 
     block_timestamp,
     block_number,
-    log_index,
-    params.from AS address, 
-    CAST(params.part AS BIGNUMERIC) AS delta_balance,
-    transaction_hash,
+    log_index, 
+    params.borrower AS address, 
+    CAST(params.accountBorrows AS BIGNUMERIC) AS balance, 
+    CAST(params.totalBorrows AS BIGNUMERIC) AS total_supply,
+    CAST(params.borrowAmount AS BIGNUMERIC) AS delta_balance,
   FROM borrow_event
   
   UNION ALL
@@ -93,34 +99,36 @@ borrows_and_repays AS (
     block_timestamp,
     block_number,
     log_index, 
-    params.to AS address, 
-    -1 * CAST(params.part AS BIGNUMERIC) AS delta_balance,
-    transaction_hash
+    params.borrower AS address, 
+    CAST(params.accountBorrows AS BIGNUMERIC) AS balance, 
+    CAST(params.totalBorrows AS BIGNUMERIC) AS total_supply,
+    -1 * CAST(params.repayAmount AS BIGNUMERIC) AS delta_balance,
   FROM repay_borrow_event
 ),
 
-excluded_list AS (
-  SELECT address FROM `minting-incentives.exclusions.excluded_owners`),
-  
-ctoken_parsed_events AS (
-SELECT *, 
-  SUM(delta_balance) OVER (ORDER BY block_timestamp, log_index ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS total_supply,
-  SUM(delta_balance) OVER (PARTITION BY address ORDER BY block_timestamp, log_index ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS balance,
-FROM borrows_and_repays 
-WHERE address NOT IN (SELECT address FROM excluded_list)
-
+-- Join the borrow index to each event
+ctoken_parsed_events as (
+SELECT
+  borrows_and_repays.block_timestamp AS block_timestamp,
+  borrows_and_repays.log_index AS log_index,
+  borrows_and_repays.address AS address,
+  borrows_and_repays.balance AS balance,
+  borrows_and_repays.total_supply AS total_supply,
+  borrows_and_repays.delta_balance AS delta_balance,
+  accrue_interest_parse_event.borrow_index AS borrow_index
+FROM borrows_and_repays LEFT JOIN accrue_interest_parse_event ON borrows_and_repays.block_number=accrue_interest_parse_event.block_number
 ),
 
--- -- ==== Add initial & final state events ====
+-- ==== Add initial & final state events ====
 
--- -- Note: Since the `accrueIntrest` function likley wasn't called  in the block of StartDate and
--- -- CutOffDate we consider the latest intrest accrual before startDate and CutOff date for the 
--- -- intrest accrual of everyone. This create a small inaccuracy were we will underdistribute
--- -- for accrued intrest of everyone between the latest intrest accrual and and the Start/End date.
+-- Note: Since the `accrueIntrest` function likley wasn't called  in the block of StartDate and
+-- CutOffDate we consider the latest intrest accrual before startDate and CutOff date for the 
+-- intrest accrual of everyone. This create a small inaccuracy were we will underdistribute
+-- for accrued intrest of everyone between the latest intrest accrual and and the Start/End date.
 
--- -- 1) Prepare Initial states
+-- 1) Prepare Initial states
 
--- -- Keep only records before the start date
+-- Keep only records before the start date
 ctoken_events_before_start AS (
   SELECT * FROM ctoken_parsed_events
   WHERE block_timestamp < StartDate
@@ -128,17 +136,20 @@ ctoken_events_before_start AS (
 
 -- The latest event just before the start date
 initial_state_event AS (
-SELECT total_supply FROM ctoken_events_before_start ORDER BY block_timestamp DESC LIMIT 1
+SELECT total_supply, borrow_index FROM ctoken_events_before_start ORDER BY block_timestamp DESC LIMIT 1
 ),
 
--- -- Calculate the initial balance on start date for each address
+-- Calculate the initial balance on start date for each address
 initial_balances as (
   SELECT *   
   FROM  (
     -- Pick the most recent event for each address 
     SELECT 
       address,
-      balance AS balance,
+      -- To account for the accrued interest, the last borrow balance is augmented with the accrued 
+      -- interest according the index formula: 
+      -- balance_with_accrued_interest = principal * current_idnex / index_since_last_accrued
+      balance * (SELECT borrow_index FROM initial_state_event) / borrow_index AS balance,
       -- Add a rank within each address by descending time order
       -- Rank 1 means the most recent event for a given address
       RANK() OVER (PARTITION BY address ORDER BY block_timestamp DESC, log_index DESC) as rank 
@@ -147,7 +158,7 @@ initial_balances as (
   WHERE rank=1
 ),
 
--- -- Initial state on the start date (balance on the start date)
+-- Initial state on the start date (balance on the start date)
 ctoken_initial_state AS (
   SELECT 
     StartDate AS block_timestamp,
@@ -162,21 +173,24 @@ ctoken_initial_state AS (
   FROM initial_balances
 ),
 
--- -- 2) Prepare final states
+-- 2) Prepare final states
 
 -- The latest event just before the cutoff date
 final_state_event AS (
-SELECT total_supply FROM ctoken_parsed_events ORDER BY block_timestamp DESC LIMIT 1
+SELECT total_supply, borrow_index FROM ctoken_parsed_events ORDER BY block_timestamp DESC LIMIT 1
 ),
 
--- -- Final balances on the cutoff date
+-- Final balances on the cutoff date
 final_balance as (
   SELECT *
   FROM  (
     -- Pick the most recent event for each address 
     SELECT
       address,
-      balance AS balance,
+      -- To account for the accrued interest, the last borrow balance is augmented with the accrued 
+      -- interest according the index formula: 
+      -- balance_with_accrued_interest = principal * current_idnex / index_since_last_accrued
+      balance * (SELECT borrow_index FROM final_state_event) / borrow_index AS balance,
       -- Add a rank within each address by descending time order
       -- Rank 1 means the most recent event for a given address
       RANK() OVER (PARTITION BY address ORDER BY block_timestamp DESC, log_index DESC) as rank 
@@ -185,7 +199,7 @@ final_balance as (
   WHERE rank=1
 ),
 
--- -- Final state on cutoff date
+-- Final state on cutoff date
 ctoken_final_states AS (
   SELECT
     CutoffDate AS block_timestamp,
@@ -213,11 +227,14 @@ with_start_events AS (
 
 ),
 
--- -- ==== Reward calculation ====
 
--- Note: This script does not reward for the exact borrow balance
--- because of the constantly accruing borrow balance. We consider
--- the principal
+-- ==== Reward calculation ====
+
+-- Note: This script does not reward for the exact borrow balance.
+-- Due to the constantly accruing borrow balance we only consider
+-- the borrow balance at the time of the event thus overdistributing 
+-- a bit. We distribute like if the accured part was constant since the
+-- last crediting.
 
 -- 1) Calculate the cumulative reward per token 
 
