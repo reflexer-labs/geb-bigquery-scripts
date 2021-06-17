@@ -79,6 +79,16 @@ Total FLX distributed: 290 FLX
 
 Total FLX distributed: 220 FLX
 
+### Yearn
+
+Reward attributed to the yearn strategy from the idle distribution are forwarded to yvRAI holders
+
+- Period: From June-07-2021 04:37:06 UTC Until June-17-2021 12:50pm UTC
+- Query: `yv-rai.sql`
+- Command `./run_incentives_query.sh ./distributions/distribution-3/queries/yv-rai.sql exclusions.csv distributions/distribution-3/query-results/yv-rai.sql.csv`
+
+Total FLX distributed: 18.029974241
+
 ### FLX/ETH UNI-V2 LP
 
 40 FLX per day to FLX/ETH LPs on Uniswap V2. See `https://docs.reflexer.finance/incentives/flx-liquidity-incentives`
