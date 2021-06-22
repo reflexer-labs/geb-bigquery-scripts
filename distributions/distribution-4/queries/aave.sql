@@ -1,7 +1,7 @@
 -- Config 
 DECLARE StartDate DEFAULT TIMESTAMP("2021-06-21 12:50:00+00"); -- UTC date, Set it to when to start to distribute rewards
 DECLARE CutoffDate DEFAULT TIMESTAMP("2021-06-22 12:50:00+00"); -- UTC date, Set it to when to stop to distribute rewards
-DECLARE BorrowAsset DEFAULT "0x8798249c2e607446efb7ad49ec89dd1865ff4272"; -- Asset to reward borrowers RAI 0x03ab458634910aad20ef5f1c8ee96f1d6ac54919 USDC 0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48
+DECLARE BorrowAsset DEFAULT "0x03ab458634910aad20ef5f1c8ee96f1d6ac54919"; -- Asset to reward borrowers RAI 0x03ab458634910aad20ef5f1c8ee96f1d6ac54919 USDC 0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48
 DECLARE TokenOffered DEFAULT 100e18; -- Number of FLX to distribute in total
 
 -- Constants
