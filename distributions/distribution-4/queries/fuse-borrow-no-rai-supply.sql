@@ -1,7 +1,7 @@
 -- Config 
 DECLARE DeployDate DEFAULT TIMESTAMP("2021-04-8 20:00:00+00"); -- UTC date, Set it to just before the first ever LP token mint
-DECLARE StartDate DEFAULT TIMESTAMP("2021-05-13 12:50:00+00"); -- UTC date, Set it to when to start to distribute rewards
-DECLARE CutoffDate DEFAULT TIMESTAMP("2021-06-17 12:50:00+00"); -- UTC date, Set it to when to stop to distribute rewards
+DECLARE StartDate DEFAULT TIMESTAMP("2021-06-17 12:50:00+00"); -- UTC date, Set it to when to start to distribute rewards
+DECLARE CutoffDate DEFAULT TIMESTAMP("2021-07-07 12:50:00+00"); -- UTC date, Set it to when to stop to distribute rewards
 DECLARE CTokenAddress DEFAULT "0x752f119bd4ee2342ce35e2351648d21962c7cafe"; -- CToken contract
 DECLARE TokenOffered DEFAULT 525e18; -- Number of FLX to distribute in total
 
@@ -421,9 +421,9 @@ erc20_final_reward_list AS (
 no_lender_reward_list AS (
   SELECT
     a.address AS address,
-    GREATEST(a.reward - COALESCE(b.reward,0),0) as Reward,
+    GREATEST(a.reward - COALESCE(b.reward * 1.5 ,0),0) as Reward,
     a.reward as a,
-    b.reward as b
+    b.reward * 1.5 as b 
   FROM final_reward_list a
   LEFT JOIN erc20_final_reward_list b
   ON a.address = b.address

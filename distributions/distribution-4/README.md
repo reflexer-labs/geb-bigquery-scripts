@@ -115,7 +115,7 @@ Total FLX distributed: 1430 FLX
 
 28.5714 FLX per day to RAI/ETH Uniswap v3 LPs that also minted RAI. See `https://docs.reflexer.finance/incentives/rai-uniswap-v3-mint-+-lp-incentives-program`
 
-- Period: From June-09-2021 12:50pm UTC Until July-15-2021 12:50pm UTC
+- Period: From July-09-2021 12:50pm UTC Until July-15-2021 12:50pm UTC
 - Query: Node script at https://github.com/reflexer-labs/uni-v3-incentive-reward-script
 
 Total FLX distributed: 171.42857 FLX
@@ -124,7 +124,7 @@ Total FLX distributed: 171.42857 FLX
 
 28.5714 FLX per day to RAI/DAI Uniswap v3 LPs that also minted RAI. See `https://docs.reflexer.finance/incentives/rai-uniswap-v3-mint-+-lp-incentives-program`
 
-- Period: From June-09-2021 12:50pm UTC Until July-15-2021 12:50pm UTC
+- Period: From July-09-2021 12:50pm UTC Until July-15-2021 12:50pm UTC
 - Query: Node script at https://github.com/reflexer-labs/uni-v3-incentive-reward-script
 
 Total FLX distributed: 171.42857 FLX
