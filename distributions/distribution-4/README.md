@@ -39,7 +39,7 @@ Total FLX distributed: 300 FLX
 - Query `fuse-borrower.sql`
 - Command `./run_incentives_query.sh ./distributions/distribution-4/queries/fuse-borrower-no-rai-supply.sql exclusions.csv distributions/distribution-4/query-results/fuse-borrower-no-rai-supply.csv`
 
-Total FLX distributed: 300 FLX
+Total FLX distributed: 120 FLX
 
 ### Kashi borrower
 
