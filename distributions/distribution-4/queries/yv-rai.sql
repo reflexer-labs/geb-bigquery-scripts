@@ -2,7 +2,7 @@ DECLARE TokenAddress DEFAULT "0x873fb544277fd7b977b196a826459a69e27ea4ea";     -
 DECLARE DeployDate DEFAULT TIMESTAMP("2021-06-04 00:00:00+00");                -- UTC date, Set it to just before the first ever LP token mint
 DECLARE StartDate DEFAULT TIMESTAMP("2021-06-17 16:54:00+00");                -- UTC date, Set it to when to start to distribute rewards
 DECLARE CutoffDate DEFAULT TIMESTAMP("2021-07-15 12:50:00+00");                -- UTC date, Set it to when to stop to distribute rewards
-DECLARE TokenOffered DEFAULT XXXXe18;                                              -- Number of FLX to distribute in total
+DECLARE TokenOffered DEFAULT 76.21922877e18;                                              -- Number of FLX to distribute in total
 
 -- Constants
 DECLARE NullAddress DEFAULT "0x0000000000000000000000000000000000000000";
@@ -33,7 +33,7 @@ erc20_transfers_deltas AS (
 
 -- Exclusion list of addresses that wont receive rewards
 excluded_list AS (
-  SELECT address FROM `minting-incentives.exclusions.excluded_owners`),
+  SELECT address FROM `reflexer-bigquery-analytics.exclusions.excluded_owners`),
 
 -- Add erc20 token total_supply and individual balances
 erc20_transfers_balance_all AS (

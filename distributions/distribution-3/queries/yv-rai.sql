@@ -33,7 +33,7 @@ erc20_transfers_deltas AS (
 
 -- Exclusion list of addresses that wont receive rewards
 excluded_list AS (
-  SELECT address FROM `minting-incentives.exclusions.excluded_owners`),
+  SELECT address FROM `reflexer-bigquery-analytics.exclusions.excluded_owners`),
 
 -- Add erc20 token total_supply and individual balances
 erc20_transfers_balance_all AS (

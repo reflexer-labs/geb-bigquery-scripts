@@ -62,14 +62,14 @@ address_time_with_debt AS (
 
 # Exclusion list of addresses that wont receive rewards, lower case only!
 excluded_list AS (
-  SELECT * FROM `minting-incentives.exclusions.excluded_owners` as address
+  SELECT * FROM `reflexer-bigquery-analytics.exclusions.excluded_owners` as address
 ),
 
 
 # Safe <> Owner mapping
 safe_owners AS (
   SELECT block, safe, owner
-  from `minting-incentives.safe_owners.safe_owners`
+  from `reflexer-bigquery-analytics.safe_owners.safe_owners`
   WHERE
     block = CutoffBlock
 )

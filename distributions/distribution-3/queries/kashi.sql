@@ -100,7 +100,7 @@ borrows_and_repays AS (
 ),
 
 excluded_list AS (
-  SELECT address FROM `minting-incentives.exclusions.excluded_owners`),
+  SELECT address FROM `reflexer-bigquery-analytics.exclusions.excluded_owners`),
   
 ctoken_parsed_events AS (
 SELECT *, 

@@ -11,7 +11,7 @@ DECLARE RewardRate DEFAULT TokenOffered / CAST(TIMESTAMP_DIFF(CutoffDate, StartD
 
 # Exclusion list of addresses that wont receive rewards
 WITH excluded_list AS (
-  SELECT address FROM `minting-incentives.exclusions.excluded_owners`),
+  SELECT address FROM `reflexer-bigquery-analytics.exclusions.excluded_owners`),
 
 # Fetch the list of all RAI LP token transfers (includes mint & burns)
 raw_lp_transfers AS (

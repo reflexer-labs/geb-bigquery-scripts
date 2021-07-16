@@ -1,6 +1,6 @@
 # Exclusion list of addresses that wont receive rewards
 WITH excluded_list AS (
-  SELECT address FROM `minting-incentives.exclusions.excluded_owners`)
+  SELECT address FROM `reflexer-bigquery-analytics.exclusions.excluded_owners`)
 
 SELECT DISTINCT address, 30 AS reward FROM (
     (

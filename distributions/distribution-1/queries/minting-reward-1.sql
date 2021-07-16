@@ -213,7 +213,7 @@ final_reward_list AS (
 
 safe_owners AS (
   SELECT block, safe as address, owner
-  from `minting-incentives.safe_owners.safe_owners`
+  from `reflexer-bigquery-analytics.safe_owners.safe_owners`
   WHERE
     block = CutoffBlock
 ),

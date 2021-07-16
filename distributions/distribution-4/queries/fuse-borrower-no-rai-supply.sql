@@ -1,7 +1,7 @@
 -- Config 
 DECLARE DeployDate DEFAULT TIMESTAMP("2021-04-8 20:00:00+00"); -- UTC date, Set it to just before the first ever LP token mint
-DECLARE StartDate DEFAULT TIMESTAMP("2021-06-17 12:50:00+00"); -- UTC date, Set it to when to start to distribute rewards
-DECLARE CutoffDate DEFAULT TIMESTAMP("2021-07-07 12:50:00+00"); -- UTC date, Set it to when to stop to distribute rewards
+DECLARE StartDate DEFAULT TIMESTAMP("2021-07-07 12:50:00+00"); -- UTC date, Set it to when to start to distribute rewards
+DECLARE CutoffDate DEFAULT TIMESTAMP("2021-07-15 12:50:00+00"); -- UTC date, Set it to when to stop to distribute rewards
 DECLARE CTokenAddress DEFAULT "0x752f119bd4ee2342ce35e2351648d21962c7cafe"; -- CToken contract
 DECLARE TokenOffered DEFAULT 525e18; -- Number of FLX to distribute in total
 
@@ -307,7 +307,7 @@ erc20_transfers_deltas AS (
 
 -- Exclusion list of addresses that wont receive rewards
 excluded_list AS (
-  SELECT address FROM `minting-incentives.exclusions.excluded_owners`),
+  SELECT address FROM `reflexer-bigquery-analytics.exclusions.excluded_owners`),
 
 -- Add erc20 token total_supply and individual balances
 erc20_transfers_balance_all AS (
@@ -421,9 +421,9 @@ erc20_final_reward_list AS (
 no_lender_reward_list AS (
   SELECT
     a.address AS address,
-    GREATEST(a.reward - COALESCE(b.reward * 1.5 ,0),0) as Reward,
+    GREATEST(a.reward - COALESCE(b.reward, 0),0) as reward,
     a.reward as a,
-    b.reward * 1.5 as b 
+    b.reward as b 
   FROM final_reward_list a
   LEFT JOIN erc20_final_reward_list b
   ON a.address = b.address
@@ -433,6 +433,6 @@ total_rewards as (
   SELECT SUM(reward) as tot FROM no_lender_reward_list
 )
 
-SELECT address, reward * (TokenOffered / 1e18) / (SELECT tot FROM total_rewards)as Reward, a AS borrow, b AS Supply, a-COALESCE(b,0) AS diff  
+SELECT address, reward * (TokenOffered / 1e18) / (SELECT tot FROM total_rewards)as reward
 FROM no_lender_reward_list
 ORDER BY reward DESC

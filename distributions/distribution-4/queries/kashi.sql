@@ -1,6 +1,6 @@
 -- Config 
 DECLARE DeployDate DEFAULT TIMESTAMP("2021-05-08 16:00:00+00"); -- UTC date, Set it to just before the first ever LP token mint
-DECLARE StartDate DEFAULT TIMESTAMP("2021-06-17 16:00:00+00"); -- UTC date, Set it to when to start to distribute rewards
+DECLARE StartDate DEFAULT TIMESTAMP("2021-06-17 12:50:00+00"); -- UTC date, Set it to when to start to distribute rewards
 DECLARE CutoffDate DEFAULT TIMESTAMP("2021-07-15 12:50:00+00"); -- UTC date, Set it to when to stop to distribute rewards
 DECLARE CTokenAddress DEFAULT "0xa7c3304462b169c71f8edc894ea9d32879fb4823"; -- Kashi RAI/DAI
 DECLARE TokenOffered DEFAULT 280e18; -- Number of FLX to distribute in total
@@ -100,7 +100,7 @@ borrows_and_repays AS (
 ),
 
 excluded_list AS (
-  SELECT address FROM `minting-incentives.exclusions.excluded_owners`),
+  SELECT address FROM `reflexer-bigquery-analytics.exclusions.excluded_owners`),
   
 ctoken_parsed_events AS (
 SELECT *, 
