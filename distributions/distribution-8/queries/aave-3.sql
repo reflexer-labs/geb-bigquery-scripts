@@ -11,19 +11,19 @@ DECLARE RewardRate DEFAULT TokenOffered / CAST(TIMESTAMP_DIFF(CutoffDate, StartD
 WITH borrow_events AS (
   SELECT block_timestamp, log_index, onBehalfOf AS address, CAST(amount AS BIGNUMERIC) / 1e18 AS delta_balance
   FROM `blockchain-etl.ethereum_aave.LendingPool_v2_event_Borrow` 
-  WHERE reserve = BorrowAsset AND borrowRateMode = "2"
+  WHERE reserve = BorrowAsset AND borrowRateMode = "2" AND block_timestamp < CutoffDate
 ),
 
 repay_events AS (
   SELECT block_timestamp , log_index, user AS address, -1 * CAST(amount as BIGNUMERIC) / 1e18 AS delta_balance
   FROM `blockchain-etl.ethereum_aave.LendingPool_v2_event_Repay` 
-  WHERE reserve = BorrowAsset
+  WHERE reserve = BorrowAsset AND block_timestamp < CutoffDate
 ),
 
 accrue_interest_event AS (
 SELECT block_timestamp, CAST(variableBorrowIndex AS BIGNUMERIC) / 1e27 as index
 FROM `blockchain-etl.ethereum_aave.LendingPool_v2_event_ReserveDataUpdated`
-WHERE reserve = BorrowAsset
+WHERE reserve = BorrowAsset AND block_timestamp < CutoffDate
 ),
 
 -- Union borrows and repays
@@ -205,8 +205,7 @@ aave_earned AS (
 
 -- Sum up the earned event per address
 final_reward_list AS (
-  SELECT address, SUM(earned) AS reward
-  FROM aave_earned
+  SELECT address, SUM( CASE WHEN earned < 0 THEN 0 ELSE earned END) AS reward  FROM aave_earned
   GROUP BY address
 ),
 
