@@ -2,7 +2,7 @@
 
 Distribution date: 18th June 2022
 
-- Start: May-15-2022 12:50pm UTC
+- Start: June-15-2022 12:50pm UTC
 - Cutoff-date: June-15-2022 12:50pm UTC
 
 Results of the overall distribution are in `per_campaign.csv` for individual query results for each distribution and in `summed.csv` which is the final file used for generating the Merkle root for the distributor contract.
@@ -13,9 +13,9 @@ To combine the individual query results run `./run_combine.sh ./distributions/di
 
 10 FLX per day to RAI borrowers pro rata to the borrow amount.
 
-- Period: From April-15-2022 12:50pm UTC Until May-15-2022 12:50pm UTC
+- Period: From May-15-2022 12:50pm UTC Until June-15-2022 12:50pm UTC
 - Query `aave.sql`
-- Command `./run_incentives_query.sh ./distributions/distribution-15/queries/aave.sql exclusions.csv distributions/distribution-14/query-results/aave.csv`
+- Command `./run_incentives_query.sh ./distributions/distribution-15/queries/aave.sql exclusions.csv distributions/distribution-15/query-results/aave.csv`
 
 The following DefiSaver users rewards was reassigned to their respective EOA:
 
@@ -33,42 +33,42 @@ RAI borrower EOA, RAI borrower dsproxy
 0xdae946bc673428edc21e556d8bdbefb8f0395d28, 0x95485ef92eb1a621eed2fe6fd5d7e325126fc9fe
 0x5c0ac266833e36e98edb52070bcea5be6c1145c6, 0x3d31da031ad4491c65740e946c9262b0f90a294d
 
-Total FLX distributed: 300 FLX
+Total FLX distributed: 310 FLX
 
 ### Fuse borrower
 
 10 FLX per day to RAI borrowers that didn't supply RAI pro rata to the borrow amount.
 
-- Period: From April-15-2022 12:50pm UTC Until May-15-2022 12:50pm UTC
+- Period: From May-15-2022 12:50pm UTC Until June-15-2022 12:50pm UTC
 - Query `fuse-borrower-no-rai-supply.sql`
 - Command `./run_incentives_query.sh ./distributions/distribution-15/queries/fuse-borrower-no-rai-supply.sql exclusions.csv distributions/distribution-15/query-results/fuse-borrower-no-rai-supply.csv`
 
-Total FLX distributed: 300 FLX
+Total FLX distributed: 310 FLX
 
 ### Idle users
 
 10 FLX per day to RAI lenders on Idle Finance.
 
-- Period: From April-15-2022 12:50pm UTC Until May-15-2022 12:50pm UTC
+- Period: From May-15-2022 12:50pm UTC Until June-15-2022 12:50pm UTC
 - Query `idle.sql`
-- Command `./run_incentives_query.sh ./distributions/distribution-14/queries/idle.sql exclusions.csv distributions/distribution-14/query-results/idle.csv`
+- Command `./run_incentives_query.sh ./distributions/distribution-15/queries/idle.sql exclusions.csv distributions/distribution-15/query-results/idle.csv`
 
-Total FLX distributed: 300 FLX
+Total FLX distributed: 310 FLX
 
 ### RAI/ETH UNI-V2 LP
 
-50 FLX per day to RAI/ETH LPs on Uniswap that also minted RAI. See `https://docs.reflexer.finance/incentives/rai-mint-+-lp-incentives-program`
+50 FLX per day to RAI/ETH LPs on Uniswap.
 
-- Period: From April-15-2022 12:50pm UTC Until May-15-2022 12:50pm UTC
+- Period: From May-15-2022 12:50pm UTC Until June-15-2022 12:50pm UTC
 - Query: Node script at https://github.com/reflexer-labs/lp-minter-reward-script
 
-Total FLX distributed: 600 FLX
+Total FLX distributed: 620 FLX
 
 ### RAI/DAI UNI-V3 LP
 
 140 FLX per day to RAI/DAI Uniswap v3 LPs at Redemption price that also minted RAI. See `https://docs.reflexer.finance/incentives/rai-uniswap-v3-mint-+-lp-incentives-program`
 
-- Period: From April-15-2022 12:50pm UTC Until May-15-2022 12:50pm UTC
+- Period: From May-15-2022 12:50pm UTC Until June-15-2022 12:50pm UTC
 - Query: Node script at https://github.com/reflexer-labs/uni-v3-incentive-reward-script
 
-Total FLX distributed: 3600 FLX
+Total FLX distributed: 3720 FLX
