@@ -1,8 +1,8 @@
 #!/bin/bash
 set -E
 
-if [ "$#" -ne 3 ]; then
-    echo "Usage: ./run_incentives_query.sh <query_file> <exclusions file> <output_file>"
+if [ "$#" -ne 2 ]; then
+    echo "Usage: ./run_incentives_query.sh <query_file> <output_file>"
     exit
 fi
 

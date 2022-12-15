@@ -7,15 +7,13 @@ from util import get_safe_owners, write_csv_to_bq
 
 GRAPH_URL = 'https://api.thegraph.com/subgraphs/name/reflexer-labs/rai-mainnet'
 BQ_SAFEOWNERS = 'safe_owners.safe_owners'
-BQ_EXCLUDED_SAFES = 'exclusions.excluded_safes'
 GOOGLE_AUTH = os.environ['GOOGLE_AUTH']
 
 query_file = sys.argv[1]
-exclusion_file = sys.argv[2]
-output_file = sys.argv[3]
+output_file = sys.argv[2]
 
-if len(sys.argv) != 4:
-    print("Usage: python test.py <query_file> <exclusions_file> <output_file>")
+if len(sys.argv) != 3:
+    print("Usage: python test.py <query_file> <output_file>")
     sys.exit()
 
 with open(query_file, 'r') as file:
@@ -37,17 +35,6 @@ owner_schema=[bigquery.SchemaField("block", "INT64", "REQUIRED"),
               bigquery.SchemaField("safe", "STRING", "REQUIRED"),
               bigquery.SchemaField("owner", "STRING", "REQUIRED")]
 write_csv_to_bq(client, BQ_SAFEOWNERS, owner_schema, "safe_owners.csv")
-
-# Write excluded safes to BQ. The query will exclude these.
-excluded_owners = pd.read_csv(exclusion_file, header=None, names=['owner'])
-excluded_owners.info()
-
-excluded_safes = excluded_owners.merge(safe_owners, on=['owner'])['safe']
-#excluded_safes.info()
-excluded_safes.to_csv("excluded_safes.csv", header=False, index=False)
-
-exclusion_schema=[bigquery.SchemaField("address", "STRING", "REQUIRED")]
-write_csv_to_bq(client, BQ_EXCLUDED_SAFES, exclusion_schema, "excluded_safes.csv")
 
 # Run BQ Query
 parent_job = client.query(query)
