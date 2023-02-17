@@ -8,6 +8,6 @@ fi
 
 python3 -m venv venv
 source venv/bin/activate
-pip install -r python/requirements.txt |grep -v 'already satisfied'
-python python/incentives_query.py $1 $2 $3
+pip3 install -r python/requirements.txt |grep -v 'already satisfied'
+python3 python/incentives_query.py $1 $2 $3
 deactivate
