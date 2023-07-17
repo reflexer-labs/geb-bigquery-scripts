@@ -16,7 +16,7 @@ To combine the individual query results run `./run_combine.sh ./distributions/di
 - Period: From June-15-2023 12:50pm UTC Until July-15-2023 12:50pm UTC
 - Query: Node script at https://github.com/reflexer-labs/lp-minter-reward-script
 
-Total FLX distributed: 930 FLX
+Total FLX distributed: 900 FLX
 
 ### RAI/DAI UNI-V3 LP
 
