@@ -14,7 +14,7 @@ for file in files:
     if csv.iloc[0][0][:2] != "0x":
         raise Exception('Distribution file should not have header')
         
-    csv.columns =["Address", str(file.replace(".csv", ""))] 
+    csv.columns =["Address", file.replace(".csv", "")] 
     distributions.append(csv)
 
 joined = pd.DataFrame(columns=['Address'])
