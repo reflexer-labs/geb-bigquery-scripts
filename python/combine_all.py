@@ -2,6 +2,13 @@ import os
 import sys
 import pandas as pd
 
+def sumSpecial(x):
+    try:
+        f = float(x)
+        return f
+    except Exception as e:
+        return 0
+
 # Combine the output of the individual distributions into one
 
 base_path = sys.argv[1]
@@ -25,7 +32,7 @@ for distribution in distributions:
 
 joined = joined.fillna(0)
 # Sum all individual distribution
-joined["Total"] = joined.sum(axis=1)
+joined["Total"] = joined.sumSpecial(axis=1)
 # Sort decreasing
 joined = joined.sort_values('Total', ascending=False)
 # Remove addresses with 0 rewards
