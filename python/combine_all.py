@@ -2,13 +2,6 @@ import os
 import sys
 import pandas as pd
 
-def sumSpecial(x):
-    try:
-        f = float(x)
-        return f
-    except Exception as e:
-        return 0
-
 # Combine the output of the individual distributions into one
 
 base_path = sys.argv[1]
@@ -28,7 +21,7 @@ joined = pd.DataFrame(columns=['Address'])
 
 # Merge all individual distributions
 for distribution in distributions:
-    joined = pd.to_numeric.merge(joined,distribution, how='outer', on='Address')
+    joined = pd.merge(joined,distribution, how='outer', on='Address')
 
 joined = joined.fillna(0)
 # Sum all individual distribution
