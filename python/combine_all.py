@@ -28,11 +28,11 @@ joined = pd.DataFrame(columns=['Address'])
 
 # Merge all individual distributions
 for distribution in distributions:
-    joined = pd.merge(joined,distribution, how='outer', on='Address')
+    joined = pd.to_numeric.merge(joined,distribution, how='outer', on='Address')
 
 joined = joined.fillna(0)
 # Sum all individual distribution
-joined["Total"] = joined.sumSpecial(axis=1)
+joined["Total"] = joined.sum(axis=1)
 # Sort decreasing
 joined = joined.sort_values('Total', ascending=False)
 # Remove addresses with 0 rewards
